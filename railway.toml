@@ -9,3 +9,5 @@
 
 [variables]
   NODE_ENV = "production"
+  # Placeholder for OpenAI API key - will be set in Railway dashboard
+  OPENAI_API_KEY = ""

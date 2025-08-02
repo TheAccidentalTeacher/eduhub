@@ -29,10 +29,13 @@ export default function WorksheetGenerator() {
 
   const handleGenerateWorksheet = async () => {
     if (!selectedTopic || !selectedSubtopic || !selectedGrade) {
-      toast.error('Please select a topic, subtopic, and grade level');
+      const errorMsg = 'Please select a topic, subtopic, and grade level';
+      console.error('[WORKSHEET-GENERATOR]', errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
+    console.log('[WORKSHEET-GENERATOR] Starting worksheet generation');
     setIsGenerating(true);
     
     try {
@@ -44,6 +47,8 @@ export default function WorksheetGenerator() {
         style: selectedStyle,
       };
 
+      console.log('[WORKSHEET-GENERATOR] Request payload:', request);
+
       const response = await fetch('/api/generate-worksheet', {
         method: 'POST',
         headers: {
@@ -52,18 +57,37 @@ export default function WorksheetGenerator() {
         body: JSON.stringify(request),
       });
 
+      console.log('[WORKSHEET-GENERATOR] API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to generate worksheet');
+        const errorData = await response.json();
+        console.error('[WORKSHEET-GENERATOR] API error response:', errorData);
+        throw new Error(errorData.details || errorData.error || `HTTP ${response.status}`);
       }
 
       const worksheet: WorksheetResponse = await response.json();
+      console.log('[WORKSHEET-GENERATOR] Successfully received worksheet:', worksheet.id);
+      
       setGeneratedWorksheet(worksheet);
       toast.success('Worksheet generated successfully!');
       
     } catch (error) {
-      console.error('Error generating worksheet:', error);
-      toast.error('Failed to generate worksheet. Please try again.');
+      console.error('[WORKSHEET-GENERATOR] Error generating worksheet:', error);
+      
+      // Enhanced error messaging for different scenarios
+      if (error instanceof Error) {
+        if (error.message.includes('OpenAI')) {
+          toast.error('AI service configuration error. Please check the console for details.');
+        } else if (error.message.includes('fetch')) {
+          toast.error('Network error. Please check your internet connection.');
+        } else {
+          toast.error(`Generation failed: ${error.message}`);
+        }
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
+      }
     } finally {
+      console.log('[WORKSHEET-GENERATOR] Generation process completed');
       setIsGenerating(false);
     }
   };
