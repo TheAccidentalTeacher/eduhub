@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduCraft - AI Worksheet Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warm-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --generate-gradient: linear-gradient(90deg, #f6d365 0%, #ff7850 100%);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .app-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .dropdown-container {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: none;
+        }
+        
+        .dropdown-container:focus-within .dropdown-menu {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .style-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .style-btn.active {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+        }
+        
+        .generate-btn {
+            background: var(--generate-gradient);
+            transition: all 0.3s ease;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(246, 211, 101, 0.3);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(1px);
+        }
+        
+        /* Custom scrollbar for dropdowns */
+        .dropdown-menu::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .dropdown-menu::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .dropdown-menu::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body class="min-h-screen p-6 flex flex-col items-center justify-center">
+    <div class="max-w-4xl w-full mx-auto">
+        <h1 class="hero-title text-4xl md:text-5xl font-bold text-center mb-8">AI Worksheet Generator</h1>
+        
+        <div class="app-container p-8 md:p-10">
+            <!-- Topic Selection -->
+            <div class="mb-8">
+                <label class="block text-white text-xl font-semibold mb-3">Topic</label>
+                <div class="dropdown-container">
+                    <button id="topicBtn" class="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white text-left focus:outline-none focus:border-white/50">
+                        Select a topic
+                    </button>
+                    <div id="topicDropdown" class="dropdown-menu">
+                        <!-- Topics will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Subtopic Selection (initially disabled) -->
+            <div class="mb-8">
+                <label class="block text-white text-xl font-semibold mb-3">Subtopic</label>
+                <div class="dropdown-container">
+                    <button id="subtopicBtn" class="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white text-left focus:outline-none focus:border-white/50" disabled>
+                        Select a subtopic
+                    </button>
+                    <div id="subtopicDropdown" class="dropdown-menu">
+                        <!-- Subtopics will be populated by JavaScript based on selected topic -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grade Level Selection -->
+            <div class="mb-8">
+                <label class="block text-white text-xl font-semibold mb-3">Grade Level</label>
+                <div class="dropdown-container">
+                    <button id="gradeBtn" class="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white text-left focus:outline-none focus:border-white/50">
+                        Select a grade level
+                    </button>
+                    <div id="gradeDropdown" class="dropdown-menu">
+                        <div class="dropdown-item" data-value="Pre-K">Pre-K</div>
+                        <div class="dropdown-item" data-value="Kindergarten">Kindergarten</div>
+                        <div class="dropdown-item" data-value="1st Grade">1st Grade</div>
+                        <div class="dropdown-item" data-value="2nd Grade">2nd Grade</div>
+                        <div class="dropdown-item" data-value="3rd Grade">3rd Grade</div>
+                        <div class="dropdown-item" data-value="4th Grade">4th Grade</div>
+                        <div class="dropdown-item" data-value="5th Grade">5th Grade</div>
+                        <div class="dropdown-item" data-value="6th Grade">6th Grade</div>
+                        <div class="dropdown-item" data-value="7th Grade">7th Grade</div>
+                        <div class="dropdown-item" data-value="8th Grade">8th Grade</div>
+                        <div class="dropdown-item" data-value="9th Grade">9th Grade</div>
+                        <div class="dropdown-item" data-value="10th Grade">10th Grade</div>
+                        <div class="dropdown-item" data-value="11th Grade">11th Grade</div>
+                        <div class="dropdown-item" data-value="12th Grade">12th Grade</div>
+                        <div class="dropdown-item" data-value="College">College</div>
+                        <div class="dropdown-item" data-value="Adult Education">Adult Education</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Learning Objective -->
+            <div class="mb-8">
+                <label class="block text-white text-xl font-semibold mb-3">Learning Objective</label>
+                <input type="text" id="learningObjective" placeholder="e.g., Multiplication with visual models" 
+                       class="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/50">
+            </div>
+            
+            <!-- Style Preference -->
+            <div class="mb-10">
+                <label class="block text-white text-xl font-semibold mb-3">Style Preference</label>
+                <div class="grid grid-cols-3 gap-4">
+                    <button class="style-btn bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 rounded-xl font-medium transition-all hover:scale-105 active" data-style="colorful">
+                        🎨 Colorful
+                    </button>
+                    <button class="style-btn bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-xl font-medium transition-all hover:scale-105" data-style="minimal">
+                        ✨ Minimal
+                    </button>
+                    <button class="style-btn bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-xl font-medium transition-all hover:scale-105" data-style="playful">
+                        🎯 Playful
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Generate Button -->
+            <button id="generateBtn" class="w-full generate-btn text-white py-4 rounded-xl text-xl font-bold shadow-xl flex items-center justify-center">
+                <span class="mr-2">✨</span> Generate with AI
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Topics and subtopics data from the document
+        const topicsData = [
+            {
+                topic: "Biblical Studies & Theology",
+                subtopics: ["Theology Proper", "Christology", "Pneumatology", "Bibliology", "Soteriology", "Ecclesiology", "Eschatology", "Anthropology", "Hamartiology", "Angelology", "Old Testament Survey", "New Testament Survey", "Biblical Geography", "Biblical Archaeology", "Church History", "Apologetics", "Biblical Languages (Hebrew/Greek)", "Hermeneutics", "Biblical Ethics", "Systematic Theology"]
+            },
+            {
+                topic: "Constitutional Law & Civics",
+                subtopics: ["Bill of Rights", "Separation of Powers", "Federalism", "Electoral Process", "Supreme Court Cases", "State vs Federal Rights", "Constitutional Amendments", "Founding Fathers", "Declaration of Independence", "Articles of Confederation", "Judicial Review", "Executive Powers", "Legislative Process", "Civil Liberties", "Due Process", "Equal Protection", "Commerce Clause", "Religious Freedom", "Free Speech", "Second Amendment"]
+            },
+            {
+                topic: "Financial Literacy & Economics",
+                subtopics: ["Personal Budgeting", "Tax Preparation (1040)", "Investment Basics", "Banking Fundamentals", "Credit & Debt", "Insurance Types", "Retirement Planning", "Real Estate", "Small Business Basics", "Entrepreneurship", "Economic Systems", "Supply & Demand", "Inflation", "Interest Rates", "Stock Market", "Cryptocurrency", "Estate Planning", "Financial Goal Setting", "Consumer Protection", "Economic History"]
+            },
+            {
+                topic: "Practical Life Skills",
+                subtopics: ["Time Management", "Cooking Basics", "Household Budgeting", "Home Maintenance", "Car Maintenance", "Basic Repairs", "Laundry & Cleaning", "Organization Systems", "Communication Skills", "Job Interview Skills", "Resume Writing", "Customer Service", "Problem Solving", "Critical Thinking", "Decision Making", "Goal Setting", "Study Skills", "Research Methods", "Public Speaking", "Leadership"]
+            },
+            {
+                topic: "Survival & Preparedness",
+                subtopics: ["Emergency Planning", "Food Storage", "Water Purification", "First Aid", "Shelter Building", "Fire Starting", "Navigation", "Weather Prediction", "Emergency Communication", "Power Outages", "Natural Disasters", "Urban Survival", "Wilderness Survival", "Bug-Out Bags", "Home Security", "Personal Safety", "Emergency Medical", "Food Preservation", "Alternative Energy", "Community Preparedness"]
+            },
+            {
+                topic: "Firearms & Self-Defense",
+                subtopics: ["Gun Safety Rules", "Firearm Types", "Ammunition Basics", "Proper Storage", "Cleaning & Maintenance", "Shooting Fundamentals", "Legal Responsibilities", "Concealed Carry Laws", "Home Defense", "Personal Protection", "Situational Awareness", "De-escalation", "Physical Self-Defense", "Pepper Spray Use", "Security Systems", "Emergency Response", "Threat Assessment", "Legal Use of Force", "Training Requirements", "Mental Preparedness"]
+            },
+            {
+                topic: "Gardening & Agriculture",
+                subtopics: ["Soil Preparation", "Seed Starting", "Vegetable Gardening", "Herb Growing", "Fruit Trees", "Composting", "Pest Control", "Irrigation", "Seasonal Planning", "Harvest & Storage", "Greenhouse Growing", "Container Gardening", "Companion Planting", "Organic Methods", "Permaculture", "Livestock Basics", "Beekeeping", "Food Preservation", "Garden Tools", "Plant Diseases"]
+            },
+            {
+                topic: "Outdoor Skills & Scouting",
+                subtopics: ["Camping Basics", "Hiking Safety", "Map & Compass", "GPS Navigation", "Knot Tying", "Outdoor Cooking", "Weather Reading", "Wildlife Identification", "Leave No Trace", "Backpacking", "Fishing", "Hunting Safety", "Archery", "Rock Climbing", "Canoeing", "Swimming Safety", "Outdoor First Aid", "Nature Photography", "Stargazing", "Outdoor Leadership"]
+            },
+            {
+                topic: "Traditional Crafts & Skills",
+                subtopics: ["Woodworking", "Metalworking", "Sewing", "Knitting", "Pottery", "Leatherworking", "Blacksmithing", "Carpentry", "Electrical Basics", "Plumbing Basics", "Masonry", "Weaving", "Candle Making", "Soap Making", "Bread Baking", "Cheese Making", "Brewing", "Distilling", "Furniture Making", "Tool Making"]
+            },
+            {
+                topic: "Health & Nutrition",
+                subtopics: ["Nutrition Basics", "Meal Planning", "Food Safety", "Exercise Fundamentals", "Mental Health", "Sleep Hygiene", "Stress Management", "Natural Remedies", "Herbal Medicine", "Vitamins & Supplements", "Disease Prevention", "Emergency Medical", "CPR & AED", "Wound Care", "Dental Health", "Vision Care", "Posture & Ergonomics", "Addiction Prevention", "Health Assessment", "Medical Preparedness"]
+            },
+            {
+                topic: "History & Heritage",
+                subtopics: ["American History", "World History", "Family Genealogy", "Local History", "Military History", "Pioneer Life", "Industrial Revolution", "Great Depression", "World Wars", "Cold War", "Ancient Civilizations", "Medieval Period", "Renaissance", "Reformation", "Colonial America", "Civil War", "Westward Expansion", "Immigration", "Cultural Heritage", "Historical Research"]
+            },
+            {
+                topic: "Geography & Navigation",
+                subtopics: ["Map Reading", "Compass Use", "GPS Systems", "Topographic Maps", "Weather Maps", "Time Zones", "Coordinate Systems", "Scale & Distance", "Elevation", "Landforms", "Climate Zones", "Natural Resources", "Political Geography", "Cultural Geography", "Economic Geography", "Population Studies", "Urban Planning", "Transportation", "Communication Networks", "Geopolitics"]
+            },
+            {
+                topic: "Science & Nature",
+                subtopics: ["Biology Basics", "Chemistry Fundamentals", "Physics Principles", "Earth Science", "Astronomy", "Weather & Climate", "Ecology", "Conservation", "Animal Behavior", "Plant Biology", "Human Anatomy", "Genetics", "Evolution vs Creation", "Scientific Method", "Laboratory Safety", "Data Analysis", "Environmental Science", "Renewable Energy", "Space Exploration", "Technology"]
+            },
+            {
+                topic: "Mathematics & Logic",
+                subtopics: ["Basic Arithmetic", "Fractions & Decimals", "Percentages", "Algebra Basics", "Geometry", "Trigonometry", "Statistics", "Probability", "Logic Puzzles", "Problem Solving", "Mental Math", "Measurement", "Money Math", "Time Calculations", "Unit Conversions", "Graphing", "Patterns", "Sequences", "Mathematical Reasoning", "Real-World Applications"]
+            },
+            {
+                topic: "Language Arts & Communication",
+                subtopics: ["Grammar Rules", "Vocabulary Building", "Reading Comprehension", "Writing Skills", "Public Speaking", "Debate Techniques", "Research Methods", "Citation Formats", "Creative Writing", "Technical Writing", "Business Writing", "Letter Writing", "Email Etiquette", "Listening Skills", "Non-verbal Communication", "Presentation Skills", "Storytelling", "Poetry", "Literature Analysis", "Media Literacy"]
+            },
+            {
+                topic: "Technology & Digital Skills",
+                subtopics: ["Computer Basics", "Internet Safety", "Email Management", "Word Processing", "Spreadsheets", "Presentations", "Digital Photography", "Video Editing", "Social Media Safety", "Online Research", "Digital Citizenship", "Coding Basics", "Website Creation", "Database Basics", "Cybersecurity", "Privacy Protection", "Digital Organization", "Cloud Storage", "Troubleshooting", "Tech Ethics"]
+            },
+            {
+                topic: "Arts & Creativity",
+                subtopics: ["Drawing Basics", "Painting Techniques", "Color Theory", "Composition", "Art History", "Sculpture", "Photography", "Music Theory", "Instrument Basics", "Singing", "Dance", "Theater", "Creative Writing", "Poetry", "Storytelling", "Graphic Design", "Interior Design", "Fashion Design", "Jewelry Making", "Calligraphy"]
+            },
+            {
+                topic: "Business & Entrepreneurship",
+                subtopics: ["Business Planning", "Marketing Basics", "Sales Techniques", "Customer Service", "Accounting Basics", "Legal Structures", "Contracts", "Negotiation", "Leadership", "Team Building", "Project Management", "Time Management", "Networking", "Branding", "Online Business", "E-commerce", "Franchising", "Investment", "Risk Management", "Business Ethics"]
+            },
+            {
+                topic: "Foreign Languages & Cultures",
+                subtopics: ["Spanish Basics", "French Basics", "German Basics", "Latin Basics", "Greek Basics", "Hebrew Basics", "Cultural Studies", "Language Learning", "Translation", "Pronunciation", "Grammar", "Vocabulary", "Conversation", "Reading", "Writing", "Cultural Etiquette", "History", "Geography", "Literature", "Current Events"]
+            },
+            {
+                topic: "Philosophy & Ethics",
+                subtopics: ["Logical Reasoning", "Critical Thinking", "Moral Philosophy", "Ethics Systems", "Worldview Analysis", "Argument Structure", "Fallacies", "Debate Techniques", "Decision Making", "Value Systems", "Character Development", "Virtue Ethics", "Natural Law", "Social Contract", "Justice", "Rights & Responsibilities", "Moral Dilemmas", "Philosophical History", "Applied Ethics", "Bioethics"]
+            },
+            {
+                topic: "Christian Worldview & Apologetics",
+                subtopics: ["Evidence for God's Existence", "Biblical Authority", "Creation vs Evolution", "Problem of Evil", "Historical Jesus", "Resurrection Evidence", "Prophecy Fulfillment", "Archaeological Evidence", "Manuscript Reliability", "Comparative Religions", "Atheism Response", "Agnosticism Response", "Moral Argument", "Cosmological Argument", "Teleological Argument", "Ontological Argument", "Christian Ethics Foundation", "Natural Law Theory", "Presuppositional Apologetics", "Evidential Apologetics"]
+            },
+            {
+                topic: "Biblical Archaeology & History",
+                subtopics: ["Ancient Near East", "Biblical Geography", "Dead Sea Scrolls", "Archaeological Discoveries", "Ancient Manuscripts", "Biblical Cities", "Temple History", "Exodus Route", "Conquest of Canaan", "Babylonian Captivity", "Persian Period", "Intertestamental Period", "Roman Palestine", "Early Church Sites", "Biblical Artifacts", "Ancient Cultures", "Historical Verification", "Dating Methods", "Excavation Sites", "Biblical Chronology"]
+            },
+            {
+                topic: "Christian Character & Discipleship",
+                subtopics: ["Fruit of the Spirit", "Christian Virtues", "Spiritual Disciplines", "Prayer Life", "Bible Study Methods", "Meditation", "Fasting", "Worship", "Service", "Evangelism", "Discipleship", "Mentoring", "Accountability", "Confession", "Forgiveness", "Humility", "Integrity", "Perseverance", "Faith Development", "Spiritual Growth"]
+            },
+            {
+                topic: "Christian Family & Relationships",
+                subtopics: ["Biblical Marriage", "Parenting Principles", "Child Training", "Family Worship", "Husband's Role", "Wife's Role", "Children's Obedience", "Sibling Relationships", "Extended Family", "Courtship vs Dating", "Purity", "Communication", "Conflict Resolution", "Family Traditions", "Hospitality", "Community", "Church Family", "Friendship", "Love Languages", "Biblical Counseling"]
+            },
+            {
+                topic: "Missions & Evangelism",
+                subtopics: ["Great Commission", "Personal Evangelism", "Cross-Cultural Missions", "Missionary Biographies", "Unreached People Groups", "Gospel Presentation", "Witnessing Techniques", "Apologetic Evangelism", "Lifestyle Evangelism", "Mission Strategies", "Church Planting", "Bible Translation", "Missionary Support", "Short-term Missions", "Urban Missions", "Rural Missions", "International Missions", "Local Outreach", "Evangelism Training", "Mission History"]
+            },
+            {
+                topic: "Church History & Reformation",
+                subtopics: ["Early Church Fathers", "Persecution Periods", "Constantine Era", "Medieval Church", "Reformation Leaders", "Protestant Reformation", "Counter-Reformation", "Puritans", "Great Awakenings", "Modern Missions", "Denominational History", "Theological Controversies", "Church Councils", "Creeds & Confessions", "Revival Movements", "Missionary Movements", "American Christianity", "Global Christianity", "Church Growth", "Contemporary Issues"]
+            },
+            {
+                topic: "Christian Education & Pedagogy",
+                subtopics: ["Biblical Philosophy of Education", "Classical Education", "Charlotte Mason Method", "Unit Studies", "Living Books", "Nature Study", "Narration", "Copywork", "Dictation", "Memory Work", "Character Training", "Integrated Learning", "Multi-level Teaching", "Learning Styles", "Educational Goals", "Curriculum Selection", "Assessment Methods", "Record Keeping", "Graduation Requirements", "College Preparation"]
+            },
+            {
+                topic: "Biblical Languages & Hermeneutics",
+                subtopics: ["Hebrew Alphabet", "Greek Alphabet", "Basic Hebrew Grammar", "Basic Greek Grammar", "Word Studies", "Textual Criticism", "Translation Principles", "Interpretation Methods", "Literary Genres", "Historical Context", "Cultural Context", "Grammatical Analysis", "Lexical Studies", "Syntax", "Morphology", "Exegesis", "Exposition", "Preaching Preparation", "Study Tools", "Original Languages"]
+            },
+            {
+                topic: "Christian Literature & Arts",
+                subtopics: ["Christian Authors", "Allegory", "Christian Poetry", "Hymn History", "Sacred Music", "Christian Art History", "Biblical Art", "Iconography", "Christian Symbols", "Literature Analysis", "Pilgrim's Progress", "Chronicles of Narnia", "Christian Biographies", "Devotional Literature", "Theological Works", "Christian Fiction", "Poetry Writing", "Art Creation", "Music Composition", "Creative Expression"]
+            },
+            {
+                topic: "Stewardship & Biblical Economics",
+                subtopics: ["Biblical View of Money", "Tithing", "Offerings", "Generosity", "Contentment", "Work Ethic", "Vocational Calling", "Business Ethics", "Fair Trade", "Economic Justice", "Poverty", "Wealth", "Debt", "Saving", "Investing", "Inheritance", "Estate Planning", "Charitable Giving", "Resource Management", "Time Stewardship"]
+            },
+            {
+                topic: "Christian Science & Creation",
+                subtopics: ["Creation Account", "Intelligent Design", "Young Earth Creationism", "Old Earth Creationism", "Gap Theory", "Day-Age Theory", "Flood Geology", "Fossil Record", "Radiometric Dating", "Evolutionary Theory Critique", "Irreducible Complexity", "Information Theory", "Fine-Tuning", "Anthropic Principle", "Origin of Life", "Genetics", "Astronomy", "Earth Sciences", "Environmental Stewardship", "Science History"]
+            },
+            {
+                topic: "Biblical Counseling & Psychology",
+                subtopics: ["Biblical Anthropology", "Sin Nature", "Sanctification", "Spiritual Warfare", "Depression", "Anxiety", "Anger", "Fear", "Grief", "Addiction", "Relationships", "Marriage Counseling", "Parenting Issues", "Identity in Christ", "Thought Life", "Emotions", "Habits", "Change Process", "Hope", "Suffering"]
+            },
+            {
+                topic: "Christian Leadership & Ministry",
+                subtopics: ["Servant Leadership", "Biblical Leadership", "Pastor's Role", "Elder Qualifications", "Deacon Ministry", "Women's Ministry", "Youth Ministry", "Children's Ministry", "Worship Leadership", "Teaching Ministry", "Administrative Gifts", "Spiritual Gifts", "Ministry Calling", "Leadership Development", "Team Building", "Vision Casting", "Decision Making", "Conflict Management", "Ministry Ethics", "Burnout Prevention"]
+            },
+            {
+                topic: "Prophecy & Eschatology",
+                subtopics: ["Second Coming", "Rapture Views", "Tribulation", "Millennium", "Eternal State", "Judgment", "Heaven", "Hell", "Resurrection", "Daniel's Prophecies", "Revelation Study", "End Times Signs", "Israel's Role", "Church Age", "Dispensations", "Covenants", "Prophetic Timeline", "Antichrist", "False Prophet", "New Jerusalem"]
+            },
+            {
+                topic: "Christian Ethics & Bioethics",
+                subtopics: ["Sanctity of Life", "Abortion", "Euthanasia", "Stem Cell Research", "Genetic Engineering", "Cloning", "Medical Ethics", "End-of-Life Care", "Organ Donation", "Mental Health", "Disability", "Sexuality", "Gender", "Marriage Definition", "Divorce", "Remarriage", "Birth Control", "Fertility Treatments", "Adoption", "Medical Decisions"]
+            },
+            {
+                topic: "Worship & Liturgy",
+                subtopics: ["Biblical Worship", "Worship Elements", "Music in Worship", "Congregational Singing", "Instrumental Music", "Worship Leading", "Prayer in Worship", "Scripture Reading", "Preaching", "Communion", "Baptism", "Church Calendar", "Liturgical Seasons", "Worship Planning", "Reverence", "Participation", "Heart Attitude", "Corporate Worship", "Private Worship", "Worship History"]
+            },
+            {
+                topic: "Christian Holidays & Traditions",
+                subtopics: ["Christmas Origins", "Easter Celebration", "Advent Season", "Lent Observance", "Palm Sunday", "Good Friday", "Pentecost", "Reformation Day", "Thanksgiving", "Biblical Feasts", "Jewish Holidays", "Church Calendar", "Family Traditions", "Holiday Meanings", "Cultural Practices", "Gift Giving", "Hospitality", "Celebration Planning", "Seasonal Activities", "Memory Making"]
+            },
+            {
+                topic: "Martyrs & Christian Heroes",
+                subtopics: ["Early Martyrs", "Reformation Martyrs", "Modern Martyrs", "Missionary Heroes", "Christian Leaders", "Faith Examples", "Persecution Stories", "Courage Under Fire", "Faithful Witnesses", "Christian Biographies", "Historical Figures", "Contemporary Heroes", "Women of Faith", "Youth Examples", "Ordinary Heroes", "Sacrificial Service", "Bold Evangelists", "Faithful Pastors", "Christian Pioneers", "Legacy Builders"]
+            },
+            {
+                topic: "Christian Citizenship & Government",
+                subtopics: ["Romans 13", "Government's Role", "Christian's Duty", "Voting Principles", "Political Involvement", "Religious Freedom", "Separation of Church/State", "Civil Disobedience", "Just War Theory", "Capital Punishment", "Social Justice", "Human Rights", "Law and Order", "Authority Structures", "Civic Responsibility", "Political Parties", "Policy Issues", "Advocacy", "Community Service", "Cultural Engagement"]
+            },
+            {
+                topic: "Practical Christian Living",
+                subtopics: ["Daily Devotions", "Prayer Methods", "Bible Reading Plans", "Scripture Memorization", "Christian Habits", "Time Management", "Priorities", "Decision Making", "Peer Pressure", "Media Discernment", "Entertainment Choices", "Social Media", "Technology Use", "Friendship", "Dating Standards", "Dress Standards", "Speech Patterns", "Attitude", "Witness", "Lifestyle Evangelism"]
+            }
+        ];
+
+        // Populate topic dropdown
+        const topicDropdown = document.getElementById('topicDropdown');
+        const topicBtn = document.getElementById('topicBtn');
+        const subtopicDropdown = document.getElementById('subtopicDropdown');
+        const subtopicBtn = document.getElementById('subtopicBtn');
+        
+        // Populate topics
+        topicsData.forEach(item => {
+            const topicItem = document.createElement('div');
+            topicItem.className = 'dropdown-item';
+            topicItem.textContent = item.topic;
+            topicItem.dataset.topic = item.topic;
+            topicDropdown.appendChild(topicItem);
+            
+            // Add click event
+            topicItem.addEventListener('click', () => {
+                topicBtn.textContent = item.topic;
+                subtopicBtn.disabled = false;
+                subtopicBtn.textContent = 'Select a subtopic';
+                
+                // Clear and populate subtopics
+                subtopicDropdown.innerHTML = '';
+                item.subtopics.forEach(subtopic => {
+                    const subtopicItem = document.createElement('div');
+                    subtopicItem.className = 'dropdown-item';
+                    subtopicItem.textContent = subtopic;
+                    subtopicDropdown.appendChild(subtopicItem);
+                    
+                    // Add click event for subtopic
+                    subtopicItem.addEventListener('click', () => {
+                        subtopicBtn.textContent = subtopic;
+                    });
+                });
+            });
+        });
+        
+        // Grade level selection
+        const gradeBtn = document.getElementById('gradeBtn');
+        const gradeDropdown = document.getElementById('gradeDropdown');
+        
+        document.querySelectorAll('#gradeDropdown .dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                gradeBtn.textContent = item.textContent;
+            });
+        });
+        
+        // Style button selection
+        const styleButtons = document.querySelectorAll('.style-btn');
+        styleButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                styleButtons.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+            });
+        });
+        
+        // Generate button
+        const generateBtn = document.getElementById('generateBtn');
+        generateBtn.addEventListener('click', () => {
+            const topic = topicBtn.textContent;
+            const subtopic = subtopicBtn.textContent;
+            const grade = gradeBtn.textContent;
+            const objective = document.getElementById('learningObjective').value;
+            const style = document.querySelector('.style-btn.active').dataset.style;
+            
+            if (topic === 'Select a topic' || subtopic === 'Select a subtopic' || grade === 'Select a grade level') {
+                alert('Please select a topic, subtopic, and grade level before generating.');
+                return;
+            }
+            
+            // Show generation in progress
+            generateBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Generating...';
+            
+            // Simulate generation (in a real app, this would call an API)
+            setTimeout(() => {
+                alert(`Generating a ${style} worksheet for ${grade} on ${subtopic} (${topic}) with objective: ${objective || 'General understanding'}`);
+                generateBtn.innerHTML = '<span class="mr-2">✨</span> Generate with AI';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
