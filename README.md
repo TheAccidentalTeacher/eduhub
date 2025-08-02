@@ -50,25 +50,21 @@ npm run dev
 
 ## Deployment
 
-### Vercel (Recommended)
+### Railway (Recommended)
 
 1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add your `OPENAI_API_KEY` environment variable in Vercel dashboard
-4. Deploy!
+2. Connect your repository to Railway
+3. Add your `OPENAI_API_KEY` environment variable in Railway dashboard
+4. Deploy! Railway will auto-detect and deploy your Next.js app
 
-### Railway
-
-1. Connect your GitHub repository to Railway
-2. Add your `OPENAI_API_KEY` environment variable
-3. Deploy!
+See [RAILWAY.md](RAILWAY.md) for detailed deployment instructions.
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **Styling**: Tailwind CSS
 - **AI**: OpenAI GPT-4 API
-- **Deployment**: Vercel/Railway ready
+- **Deployment**: Railway optimized
 
 ## Project Structure
 
@@ -78,12 +74,12 @@ npm run dev
 │   ├── globals.css               # Global styles
 │   ├── layout.tsx                # Root layout
 │   └── page.tsx                  # Main worksheet generator page
-├── components/                   # Reusable React components
 ├── data/
 │   └── topics.ts                # Educational topics and subtopics data
 ├── types/
 │   └── worksheet.ts             # TypeScript type definitions
-└── public/                      # Static assets
+├── railway.toml                 # Railway deployment configuration
+└── RAILWAY.md                   # Railway deployment guide
 ```
 
 ## Environment Variables
