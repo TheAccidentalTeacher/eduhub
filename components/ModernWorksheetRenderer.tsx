@@ -118,7 +118,7 @@ export default function ModernWorksheetRenderer({
 
           {/* Visual aid if present */}
           {question.visualAid && (
-            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <div className="mb-6 rounded-2xl overflow-hidden shadow-lg w-full">
               <img 
                 src={question.visualAid} 
                 alt="Question visual aid"
@@ -214,11 +214,11 @@ export default function ModernWorksheetRenderer({
           <div className="relative">
             {/* Main visual element */}
             {worksheet.visualElements?.find(v => v.placement === 'header') && (
-              <div className="mb-6 text-center">
+              <div className="mb-6 text-center w-full">
                 <img 
                   src={worksheet.visualElements.find(v => v.placement === 'header')?.url}
                   alt="Main illustration"
-                  className="w-64 h-48 object-cover rounded-2xl mx-auto shadow-xl border-4 border-white/30"
+                  className="w-full h-48 object-cover rounded-2xl mx-auto shadow-xl max-w-lg"
                 />
               </div>
             )}

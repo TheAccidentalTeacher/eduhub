@@ -209,6 +209,28 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Clean image display - no text overlays */
+.visual-element img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.75rem;
+}
+
+/* Ensure image containers fill space completely */
+.visual-element > div > div {
+  width: 100%;
+  height: 100%;
+}
+
+/* Full-width images for educational content */
+.visual-element.fullwidth img {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+}
+
 /* Interactive Activity Styles */
 .activity-container {
   position: relative;
