@@ -8,6 +8,7 @@ import {
   searchEducationalVideos,
   searchEducationalGifs 
 } from '@/utils/apiServices';
+import { generateIntelligentImage } from '@/utils/intelligentImageService';
 
 // Initialize OpenAI client
 function getOpenAIClient() {
@@ -204,7 +205,10 @@ export async function POST(request: NextRequest) {
 
     console.log('[ENHANCED-WORKSHEET-API] Gathering visual and content resources...');
 
-    // Step 1: Gather visual and multimedia content in parallel
+    // Step 1: Generate intelligent primary image
+    const intelligentImage = await generateIntelligentImage(topic, subtopic, gradeLevel, learningObjective);
+
+    // Step 2: Gather additional visual and multimedia content in parallel
     const [
       topicImages,
       currentEvents,
@@ -212,7 +216,7 @@ export async function POST(request: NextRequest) {
       educationalVideos,
       customIllustration
     ] = await Promise.allSettled([
-      searchAllImages(`${subtopic} education children ${gradeLevel}`, 4),
+      searchAllImages(`${subtopic} education children ${gradeLevel}`, 3), // Reduced since we have intelligent image
       searchRelevantNews(topic, 2),
       searchEducationalGifs(subtopic, 2),
       searchEducationalVideos(subtopic, gradeLevel, 2),
@@ -223,7 +227,20 @@ export async function POST(request: NextRequest) {
     const visualElements: VisualElement[] = [];
     let processedCurrentEvents: any[] = [];
 
-    // Add images
+    // Priority 1: Add intelligent AI-generated image first (header position)
+    if (intelligentImage) {
+      visualElements.push({
+        id: 'intelligent_primary',
+        type: intelligentImage.method === 'educational_diagram' ? 'diagram' : 'illustration',
+        url: intelligentImage.url,
+        description: intelligentImage.description,
+        source: intelligentImage.source,
+        placement: 'header'
+      });
+      console.log(`[ENHANCED-WORKSHEET-API] Added intelligent image via ${intelligentImage.method}`);
+    }
+
+    // Priority 2: Add stock images (inline placement only, since header is taken)
     if (topicImages.status === 'fulfilled' && topicImages.value.length > 0) {
       topicImages.value.forEach((img, index) => {
         visualElements.push({
@@ -232,7 +249,7 @@ export async function POST(request: NextRequest) {
           url: img.url,
           description: img.description,
           source: img.source,
-          placement: index === 0 ? 'header' : 'inline'
+          placement: 'inline' // Never header since intelligent image takes priority
         });
       });
     }

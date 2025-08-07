@@ -10,8 +10,23 @@
 5. Choose your `eduhub` repository
 
 ### 2. Environment Variables
-Add this environment variable in Railway dashboard:
+Add these environment variables in Railway dashboard:
+
+**Core Required:**
 - **OPENAI_API_KEY**: Your OpenAI API key (starts with `sk-`)
+
+**AI Image Generation (Recommended):**
+- **STABILITY_AI_API_KEY**: Stability AI key for high-quality educational diagrams
+
+**Optional Enhancements:**
+- **PEXELS_API_KEY**: For stock photos
+- **PIXABAY_API_KEY**: For additional stock images  
+- **UNSPLASH_ACCESS_KEY**: For professional stock photos
+- **YOUTUBE_API_KEY**: For educational videos
+- **NEWS_API_KEY**: For current events integration
+- **GIPHY_API_KEY**: For educational GIFs
+
+> **💡 Pro Tip**: The system uses intelligent image selection - DALL-E/Stability AI for custom content, stock photos for real-world items. Without these keys, it falls back to curated educational images.
 
 ### 3. Deploy
 Railway will automatically:
