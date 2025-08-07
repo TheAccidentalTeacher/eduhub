@@ -83,7 +83,7 @@ export const visualEnhancements = {
 };
 
 // 🏗️ WORKSHEET STRUCTURE GENERATOR
-export function generateStructuredWorksheet(topic, subtopic, gradeLevel) {
+export function generateStructuredWorksheet(topic: string, subtopic: string, gradeLevel: string) {
   return {
     layout: 'modern-education-template',
     
@@ -136,8 +136,8 @@ export function generateStructuredWorksheet(topic, subtopic, gradeLevel) {
 }
 
 // 📚 CONTENT GENERATORS
-function generateContentSections(subtopic) {
-  const sections = {
+function generateContentSections(subtopic: string) {
+  const sections: Record<string, Array<{title: string, description: string, imagePrompt: string}>> = {
     'Safety in Our Community': [
       {
         title: 'Police Officers',
@@ -184,8 +184,8 @@ function generateContentSections(subtopic) {
   ];
 }
 
-function generateKeyPoints(subtopic) {
-  const keyPoints = {
+function generateKeyPoints(subtopic: string) {
+  const keyPoints: Record<string, string[]> = {
     'Safety in Our Community': [
       'Know your personal information - name, address, and emergency phone number',
       'Stay with trusted adults and tell them where you are going',
@@ -213,7 +213,7 @@ function generateKeyPoints(subtopic) {
 }
 
 // 🎨 VISUAL INTEGRATION 
-export function integrateWithVisualEditor(worksheetData) {
+export function integrateWithVisualEditor(worksheetData: any) {
   return {
     ...worksheetData,
     
@@ -239,12 +239,12 @@ export function integrateWithVisualEditor(worksheetData) {
   };
 }
 
-function extractImageSlots(worksheetData) {
+function extractImageSlots(worksheetData: any) {
   const slots = [];
   
   // Extract from main content sections
   if (worksheetData.mainContent?.sections) {
-    worksheetData.mainContent.sections.forEach((section, index) => {
+    worksheetData.mainContent.sections.forEach((section: any, index: number) => {
       slots.push({
         id: `section-${index}`,
         type: 'content-image',
