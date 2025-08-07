@@ -16,6 +16,12 @@ import {
   type UserChoiceAnalysis
 } from '@/utils/advancedEducationalEngine';
 
+// Import the new template system
+import { 
+  generateStructuredWorksheet, 
+  integrateWithVisualEditor 
+} from '../../../enhanced-worksheet-template.js';
+
 // Initialize OpenAI client
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -365,11 +371,43 @@ export async function POST(request: NextRequest) {
 
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
-    // Step 4: Create enhanced response with question-specific images
+    // Step 4: Apply modern template system if requested
+    let finalWorksheetData = initialWorksheetData;
+    if (body.useModernTemplates) {
+      console.log('[ENHANCED-WORKSHEET-API] Applying modern template system...');
+      try {
+        const structuredWorksheet = generateStructuredWorksheet(topic, subtopic, gradeLevel);
+        const integratedWorksheet = integrateWithVisualEditor({
+          ...structuredWorksheet,
+          content: initialWorksheetData,
+          questions: updatedQuestions,
+          images: visualElements
+        });
+        
+        finalWorksheetData = {
+          ...initialWorksheetData,
+          title: `${topic}: ${subtopic}`,
+          templateData: integratedWorksheet,
+          useModernStyling: true,
+          styling: {
+            theme: body.style === 'modern-blue' ? 'modern-blue' : 'professional',
+            layout: 'modern-education-template',
+            colorScheme: 'blue-header-gradient'
+          }
+        };
+        
+        console.log('[ENHANCED-WORKSHEET-API] Modern template applied successfully');
+      } catch (templateError) {
+        console.error('[ENHANCED-WORKSHEET-API] Template system error:', templateError);
+        // Continue with regular generation if template fails
+      }
+    }
+
+    // Step 5: Create enhanced response with question-specific images
     try {
       // Ensure data is JSON-serializable before creating worksheet
       const contentData = {
-        ...initialWorksheetData,
+        ...finalWorksheetData,
         questions: updatedQuestions
       };
       
@@ -379,11 +417,11 @@ export async function POST(request: NextRequest) {
       
       const worksheet: WorksheetResponse = {
         id: generateWorksheetId(),
-        title: initialWorksheetData.title,
+        title: finalWorksheetData.title,
         content: testSerialization,
-        questions: initialWorksheetData.questions || [],
-        instructions: initialWorksheetData.instructions,
-        answerKey: initialWorksheetData.answerKey || [],
+        questions: finalWorksheetData.questions || [],
+        instructions: finalWorksheetData.instructions,
+        answerKey: finalWorksheetData.answerKey || [],
         createdAt: new Date().toISOString(),
         visualElements,
         activities,
@@ -395,8 +433,8 @@ export async function POST(request: NextRequest) {
           discussionPoints: [`How does this relate to ${subtopic}?`],
           ageAppropriate: true
         })),
-        pedagogicalNotes: initialWorksheetData.pedagogicalNotes,
-        difficultyProgression: initialWorksheetData.difficultyProgression
+        pedagogicalNotes: finalWorksheetData.pedagogicalNotes,
+        difficultyProgression: finalWorksheetData.difficultyProgression
       };
 
       console.log(`[ENHANCED-WORKSHEET-API] Successfully generated worksheet with ${visualElements.length} unique images (${visualElements.filter(v => v.relatedQuestionIds).length} question-specific)`);
@@ -405,8 +443,8 @@ export async function POST(request: NextRequest) {
     } catch (jsonError) {
       console.error('[ENHANCED-WORKSHEET-API] JSON serialization error:', jsonError);
       console.error('[ENHANCED-WORKSHEET-API] Problematic data:', {
-        title: initialWorksheetData.title,
-        questionsCount: initialWorksheetData.questions?.length,
+        title: finalWorksheetData.title,
+        questionsCount: finalWorksheetData.questions?.length,
         visualElementsCount: visualElements.length,
         activitiesCount: activities.length
       });
