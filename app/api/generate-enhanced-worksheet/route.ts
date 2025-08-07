@@ -366,37 +366,72 @@ export async function POST(request: NextRequest) {
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
     // Step 4: Create enhanced response with question-specific images
-    const worksheet: WorksheetResponse = {
-      id: generateWorksheetId(),
-      title: initialWorksheetData.title,
-      content: JSON.stringify(initialWorksheetData),
-      questions: initialWorksheetData.questions || [],
-      instructions: initialWorksheetData.instructions,
-      answerKey: initialWorksheetData.answerKey || [],
-      createdAt: new Date().toISOString(),
-      visualElements,
-      activities,
-      currentEvents: processedCurrentEvents.map(event => ({
-        id: `news_${Date.now()}`,
-        title: event.title,
-        summary: event.description,
-        relevance: `Connects to ${subtopic} concepts`,
-        discussionPoints: [`How does this relate to ${subtopic}?`],
-        ageAppropriate: true
-      })),
-      pedagogicalNotes: initialWorksheetData.pedagogicalNotes,
-      difficultyProgression: initialWorksheetData.difficultyProgression
-    };
+    try {
+      // Ensure data is JSON-serializable before creating worksheet
+      const contentData = {
+        ...initialWorksheetData,
+        questions: updatedQuestions
+      };
+      
+      // Test JSON serialization to catch any circular references or issues
+      const testSerialization = JSON.stringify(contentData);
+      console.log('[ENHANCED-WORKSHEET-API] Content data serialization successful');
+      
+      const worksheet: WorksheetResponse = {
+        id: generateWorksheetId(),
+        title: initialWorksheetData.title,
+        content: testSerialization,
+        questions: initialWorksheetData.questions || [],
+        instructions: initialWorksheetData.instructions,
+        answerKey: initialWorksheetData.answerKey || [],
+        createdAt: new Date().toISOString(),
+        visualElements,
+        activities,
+        currentEvents: processedCurrentEvents.map(event => ({
+          id: `news_${Date.now()}`,
+          title: event.title,
+          summary: event.description,
+          relevance: `Connects to ${subtopic} concepts`,
+          discussionPoints: [`How does this relate to ${subtopic}?`],
+          ageAppropriate: true
+        })),
+        pedagogicalNotes: initialWorksheetData.pedagogicalNotes,
+        difficultyProgression: initialWorksheetData.difficultyProgression
+      };
 
-    console.log(`[ENHANCED-WORKSHEET-API] Successfully generated worksheet with ${visualElements.length} unique images (${visualElements.filter(v => v.relatedQuestionIds).length} question-specific)`);
-    return NextResponse.json(worksheet);
+      console.log(`[ENHANCED-WORKSHEET-API] Successfully generated worksheet with ${visualElements.length} unique images (${visualElements.filter(v => v.relatedQuestionIds).length} question-specific)`);
+      return NextResponse.json(worksheet);
+      
+    } catch (jsonError) {
+      console.error('[ENHANCED-WORKSHEET-API] JSON serialization error:', jsonError);
+      console.error('[ENHANCED-WORKSHEET-API] Problematic data:', {
+        title: initialWorksheetData.title,
+        questionsCount: initialWorksheetData.questions?.length,
+        visualElementsCount: visualElements.length,
+        activitiesCount: activities.length
+      });
+      
+      // Return a simplified response if JSON fails
+      return NextResponse.json({
+        error: 'JSON serialization failed',
+        details: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error'
+      }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('[ENHANCED-WORKSHEET-API] Error:', error);
+    
+    // Log more detailed error information
+    if (error instanceof Error) {
+      console.error('[ENHANCED-WORKSHEET-API] Error message:', error.message);
+      console.error('[ENHANCED-WORKSHEET-API] Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to generate enhanced worksheet',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
