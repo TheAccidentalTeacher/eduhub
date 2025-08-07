@@ -213,13 +213,63 @@ export async function searchEducationalGifs(topic: string, count: number = 2): P
   }
 }
 
-// Combined image search across all platforms
-export async function searchAllImages(query: string, count: number = 6): Promise<ImageResult[]> {
-  const [pexelsImages, pixabayImages, unsplashImages] = await Promise.all([
-    searchPexelsImages(query, Math.ceil(count / 3)),
-    searchPixabayImages(query, Math.ceil(count / 3)),
-    searchUnsplashImages(query, Math.ceil(count / 3))
-  ]);
+// Enhanced fallback images for educational content
+const getEducationalFallbackImage = (query: string): ImageResult => {
+  const fallbackImages: { [key: string]: string } = {
+    'map': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+    'compass': 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=800&q=80',
+    'navigation': 'https://images.unsplash.com/photo-1520637836862-4d197d17c35a?w=800&q=80',
+    'geography': 'https://images.unsplash.com/photo-1597149254499-c6c5c3c74473?w=800&q=80',
+    'history': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80',
+    'science': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&q=80',
+    'math': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80',
+    'reading': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+    'writing': 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&q=80'
+  };
 
-  return [...pexelsImages, ...pixabayImages, ...unsplashImages].slice(0, count);
+  // Find best match for query
+  const queryLower = query.toLowerCase();
+  let bestMatch = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80'; // default
+  
+  for (const [key, url] of Object.entries(fallbackImages)) {
+    if (queryLower.includes(key)) {
+      bestMatch = url;
+      break;
+    }
+  }
+
+  return {
+    url: bestMatch,
+    description: `Educational illustration: ${query}`,
+    source: 'unsplash' as const
+  };
+};
+
+// Combined image search across all platforms with fallbacks
+export async function searchAllImages(query: string, count: number = 6): Promise<ImageResult[]> {
+  try {
+    const [pexelsImages, pixabayImages, unsplashImages] = await Promise.all([
+      searchPexelsImages(query, Math.ceil(count / 3)),
+      searchPixabayImages(query, Math.ceil(count / 3)),
+      searchUnsplashImages(query, Math.ceil(count / 3))
+    ]);
+
+    const allImages = [...pexelsImages, ...pixabayImages, ...unsplashImages].slice(0, count);
+    
+    // If we don't have enough images, add fallbacks
+    if (allImages.length < count) {
+      const fallbackImage = getEducationalFallbackImage(query);
+      const needed = count - allImages.length;
+      for (let i = 0; i < needed; i++) {
+        allImages.push(fallbackImage);
+      }
+    }
+    
+    return allImages;
+  } catch (error) {
+    console.error('Image search error, using fallbacks:', error);
+    // Return fallback images if all APIs fail
+    const fallbackImage = getEducationalFallbackImage(query);
+    return Array(count).fill(null).map(() => ({ ...fallbackImage }));
+  }
 }

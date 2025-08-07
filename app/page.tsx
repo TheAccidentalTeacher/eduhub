@@ -143,14 +143,15 @@ export default function WorksheetGenerator() {
         toast.loading(`Generating ${type.toUpperCase()}...`, { id: `${type}-export` });
         if (type === 'pdf') {
           const { exportToPDF } = await import('@/utils/exportUtils');
-          exportToPDF(generatedWorksheet, 'worksheet-content');
+          await exportToPDF(generatedWorksheet, 'worksheet-content');
         } else {
           const { exportToDocx } = await import('@/utils/exportUtils');
           await exportToDocx(generatedWorksheet);
         }
         toast.success(`${type.toUpperCase()} exported successfully!`, { id: `${type}-export` });
       } catch (error) {
-        toast.error(`Failed to export ${type.toUpperCase()}`, { id: `${type}-export` });
+        console.error(`Export error:`, error);
+        toast.error(`Failed to export ${type.toUpperCase()}: ${error instanceof Error ? error.message : 'Unknown error'}`, { id: `${type}-export` });
       } finally {
         setIsExporting(null);
       }
