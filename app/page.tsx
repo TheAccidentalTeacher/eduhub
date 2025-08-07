@@ -177,9 +177,9 @@ export default function WorksheetGenerator() {
   }
 
   return (
-    <div className="min-h-screen p-6 flex flex-col items-center justify-center">
-      <div className="max-w-4xl w-full mx-auto">
-        <h1 className="hero-title text-4xl md:text-5xl font-bold text-center mb-8 font-playfair">
+    <div className="min-h-screen p-4 sm:p-6">
+      <div className="max-w-4xl w-full mx-auto py-8">
+        <h1 className="hero-title text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 font-playfair">
           AI Worksheet Generator
         </h1>
         

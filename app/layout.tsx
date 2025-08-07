@@ -15,6 +15,12 @@ const playfair = Playfair_Display({
 export const metadata = {
   title: 'EduCraft - AI Worksheet Generator',
   description: 'Generate customized educational worksheets with AI',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 }
 
 export default function RootLayout({
@@ -24,6 +30,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+      </head>
       <body className="font-inter">
         {children}
         <Toaster position="top-right" />
