@@ -1,0 +1,36 @@
+{
+  "name": "visual-worksheet-editor",
+  "version": "1.0.0",
+  "description": "Azure-powered drag-and-drop worksheet editor - Your dream interface!",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "azure-deploy": "swa build --app-location . --output-location dist",
+    "azure-start": "swa start http://localhost:5173 --run \"npm run dev\""
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "framer-motion": "^10.16.4",
+    "fabric": "^5.3.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
+    "@azure/storage-blob": "^12.17.0",
+    "@azure/search-documents": "^12.0.0",
+    "lucide-react": "^0.292.0",
+    "tailwindcss": "^3.3.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.1.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "vite": "^5.0.0",
+    "@azure/static-web-apps-cli": "^1.1.4"
+  }
+}

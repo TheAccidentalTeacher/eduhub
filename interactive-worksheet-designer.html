@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Interactive Worksheet Designer - Like Your Image 3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Left sidebar - Image browser like your example */
+        .image-sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-title {
+            font-weight: bold;
+            color: #4A90E2;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .image-item {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .image-item:hover {
+            transform: scale(1.05);
+            border-color: #4A90E2;
+        }
+        
+        .image-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+        }
+        
+        /* Main worksheet area */
+        .worksheet-area {
+            flex: 1;
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: auto;
+            position: relative;
+        }
+        
+        .worksheet-content {
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Worksheet styling matching your examples */
+        .worksheet-header {
+            text-align: center;
+            background: linear-gradient(135deg, #4A90E2, #7BB3F0);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .name-date-fields {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 14px;
+        }
+        
+        .info-section {
+            background: #F8FAFE;
+            border: 2px solid #B8D4F0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-box {
+            background: #E8F4FD;
+            border: 1px solid #4A90E2;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .info-box h4 {
+            color: #4A90E2;
+            margin: 0 0 10px 0;
+        }
+        
+        .dropzone {
+            min-height: 200px;
+            border: 2px dashed #B8D4F0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            background: #FAFCFE;
+            transition: all 0.3s;
+        }
+        
+        .dropzone.drag-over {
+            border-color: #4A90E2;
+            background: #F0F8FF;
+        }
+        
+        .dropzone img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+        }
+        
+        .activity-box {
+            border: 2px solid #B8D4F0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 150px;
+        }
+        
+        .activity-prompt {
+            color: #4A90E2;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        /* Controls */
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .btn {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background: #357ABD;
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Sidebar - Image Browser (like your Image 3) -->
+    <div class="image-sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-title">📸 Community Helpers</div>
+            <div class="image-grid" id="community-images">
+                <!-- Will be populated with draggable images -->
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">🛡️ Safety Scenes</div>
+            <div class="image-grid" id="safety-images">
+                <!-- Will be populated with draggable images -->
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">📊 Diagrams</div>
+            <div class="image-grid" id="diagram-images">
+                <!-- Will be populated with draggable images -->
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">🎨 AI Generated</div>
+            <div class="image-grid" id="ai-images">
+                <!-- Will be populated with AI images -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Worksheet Area -->
+    <div class="worksheet-area">
+        <div class="controls">
+            <button class="btn" onclick="generateNewImages()">🤖 Generate AI Images</button>
+            <button class="btn" onclick="exportWorksheet()">📄 Export PDF</button>
+            <button class="btn" onclick="saveTemplate()">💾 Save Template</button>
+        </div>
+        
+        <div class="worksheet-content">
+            <!-- Header matching your example -->
+            <div class="worksheet-header">
+                <div class="name-date-fields">
+                    <div>Name: ________________</div>
+                    <div>Date: ________________</div>
+                </div>
+                <h1>Safety in Our Community</h1>
+            </div>
+            
+            <!-- Introduction text -->
+            <div class="info-section">
+                <p>Today we are going to learn about safety in our community. We will talk about how people work together to keep everyone safe and how we can help too!</p>
+            </div>
+            
+            <!-- Main content grid (matching your layout) -->
+            <div class="info-section">
+                <h3 style="color: #4A90E2;">Community Helpers Who Keep Us Safe</h3>
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h4>Police Officers</h4>
+                        <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <span>Drop image here</span>
+                        </div>
+                        <p>Police officers help keep our neighborhoods safe. They make sure people follow rules and laws.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>Firefighters</h4>
+                        <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <span>Drop image here</span>
+                        </div>
+                        <p>Firefighters help put out fires and teach us how to prevent fires in our homes and schools.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>Teachers</h4>
+                        <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <span>Drop image here</span>
+                        </div>
+                        <p>Teachers help us learn and keep us safe at school. They teach us about safety rules.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Safety rules section -->
+            <div class="info-section">
+                <h3 style="color: #4A90E2;">Important Safety Rules</h3>
+                <ol style="font-size: 16px; line-height: 1.8;">
+                    <li><strong>Know your personal information</strong> - Your full name, address, and a phone number to call in case of emergency.</li>
+                    <li><strong>Stay with trusted adults</strong> - Always tell an adult where you are going.</li>
+                    <li><strong>Use the buddy system</strong> - Play and walk with friends, not alone.</li>
+                    <li><strong>Know how to call for help</strong> - Learn how to call 911 in an emergency.</li>
+                    <li><strong>Practice fire safety</strong> - Stop, drop, and roll if your clothes catch fire.</li>
+                    <li><strong>Be careful around strangers</strong> - Never go with someone you don't know.</li>
+                </ol>
+            </div>
+            
+            <!-- Activity sections matching your examples -->
+            <div class="activity-box">
+                <div class="activity-prompt">Let's Think About Safety!</div>
+                <p>Draw a picture of a community helper who keeps you safe and write why they are important.</p>
+                <div class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)" style="min-height: 250px;">
+                    <span>Drawing/Image Area - Drop image or draw here</span>
+                </div>
+            </div>
+            
+            <div class="activity-box">
+                <div class="activity-prompt">Why is this community helper important?</div>
+                <div style="border: 1px solid #B8D4F0; min-height: 100px; border-radius: 5px; padding: 10px; background: white;">
+                    <span style="color: #999;">Write your answer here...</span>
+                </div>
+            </div>
+            
+            <div class="activity-box">
+                <div class="activity-prompt">How can YOU help keep your community safe?</div>
+                <div style="border: 1px solid #B8D4F0; min-height: 100px; border-radius: 5px; padding: 10px; background: white;">
+                    <span style="color: #999;">Write your answer here...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Image data for the sidebar
+        const imageData = {
+            community: [
+                'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&q=80', // Police officer
+                'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&q=80', // Firefighter
+                'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=200&q=80', // Teacher
+                'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=200&q=80'  // Crossing guard
+            ],
+            safety: [
+                'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&q=80', // Kids crossing street
+                'https://images.unsplash.com/photo-1551731409-43eb3e517a1a?w=200&q=80', // Fire safety
+                'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&q=80', // Playground safety
+                'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&q=80'  // Emergency
+            ],
+            diagrams: [
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80', // Map
+                'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&q=80', // Chart
+                'https://images.unsplash.com/photo-1460472178825-e5240623afd5?w=200&q=80', // Diagram
+                'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&q=80'  // Infographic
+            ]
+        };
+
+        // Populate image grids
+        function populateImages() {
+            Object.keys(imageData).forEach(category => {
+                const container = document.getElementById(category === 'community' ? 'community-images' : 
+                                                       category === 'safety' ? 'safety-images' : 'diagram-images');
+                
+                imageData[category].forEach((url, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'image-item';
+                    item.draggable = true;
+                    item.ondragstart = drag;
+                    item.innerHTML = `<img src="${url}" alt="${category} ${index + 1}">`;
+                    item.dataset.imageUrl = url;
+                    container.appendChild(item);
+                });
+            });
+        }
+
+        // Drag and drop functionality
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.target.closest('.dropzone').classList.add('drag-over');
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.closest('.image-item').dataset.imageUrl);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const imageUrl = ev.dataTransfer.getData("text");
+            const dropzone = ev.target.closest('.dropzone');
+            
+            dropzone.innerHTML = `<img src="${imageUrl}" alt="Dropped image">`;
+            dropzone.classList.remove('drag-over');
+        }
+
+        // Additional functionality
+        function generateNewImages() {
+            alert('🤖 AI Image Generation - This would connect to DALL-E, Midjourney, or Azure Cognitive Services!');
+        }
+
+        function exportWorksheet() {
+            alert('📄 Export to PDF - This would generate a clean PDF of the worksheet!');
+        }
+
+        function saveTemplate() {
+            alert('💾 Save Template - This would save your custom design for reuse!');
+        }
+
+        // Initialize
+        populateImages();
+
+        // Remove drag-over class when leaving dropzone
+        document.addEventListener('dragleave', function(e) {
+            if (e.target.classList.contains('dropzone')) {
+                e.target.classList.remove('drag-over');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Railway Environment Variables for Production
+# Copy your OpenAI key here when deploying
+
+OPENAI_API_KEY=your_openai_key_here
+NODE_ENV=production
+
+# Optional Azure services (if you want them)
+# AZURE_CONTENT_SAFETY_ENDPOINT=
+# AZURE_CONTENT_SAFETY_KEY=
+# AZURE_SEARCH_ENDPOINT=
+# AZURE_SEARCH_KEY=
+# AZURE_TRANSLATOR_KEY=
