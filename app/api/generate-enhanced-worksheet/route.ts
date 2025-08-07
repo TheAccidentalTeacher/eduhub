@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { WorksheetRequest, WorksheetResponse, VisualElement, InteractiveActivity } from '@/types/worksheet';
+import { WorksheetRequest, WorksheetResponse, VisualElement } from '@/types/worksheet';
 import { 
   searchAllImages, 
   searchRelevantNews, 
@@ -75,8 +75,7 @@ function getPedagogicalPrompt(gradeLevel: string, topic: string, subtopic: strin
 async function generateEnhancedWorksheet(
   request: WorksheetRequest,
   visualElements: VisualElement[],
-  currentEvents: any[],
-  activities: InteractiveActivity[]
+  currentEvents: any[]
 ): Promise<any> {
   const openai = getOpenAIClient();
   
@@ -102,9 +101,6 @@ ${visualElements.map(v => `- ${v.description} (${v.type})`).join('\n')}
 
 CURRENT EVENTS AVAILABLE:
 ${currentEvents.map(e => `- ${e.title}: ${e.description}`).join('\n')}
-
-INTERACTIVE ACTIVITIES PLANNED:
-${activities.map(a => `- ${a.title} (${a.type})`).join('\n')}
 
 CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
 
@@ -222,8 +218,7 @@ export async function POST(request: NextRequest) {
     const initialWorksheetData = await generateEnhancedWorksheet(
       body,
       [], // No images yet
-      [], // No current events yet  
-      []  // No activities yet
+      []  // No current events yet  
     );
 
     // STEP 2: Generate current events and activities in parallel
@@ -337,38 +332,6 @@ export async function POST(request: NextRequest) {
     // Update worksheet data with images
     initialWorksheetData.questions = updatedQuestions;
 
-    // Step 2: Create interactive activities based on grade level
-    const activities: InteractiveActivity[] = [];
-    
-    // Age-appropriate activities
-    const gradeNum = parseInt(gradeLevel.match(/\d+/)?.[0] || '1');
-    if (gradeNum <= 3) {
-      activities.push({
-        id: 'coloring_activity',
-        type: 'coloring',
-        title: `Color the ${subtopic} Scene`,
-        instructions: 'Color the picture while thinking about what you learned',
-        estimatedTime: '10 minutes'
-      });
-    } else if (gradeNum <= 6) {
-      activities.push({
-        id: 'matching_game',
-        type: 'matching-game',
-        title: `${subtopic} Connections`,
-        instructions: 'Draw lines to match related concepts',
-        estimatedTime: '8 minutes'
-      });
-    } else {
-      activities.push({
-        id: 'research_project',
-        type: 'experiment',
-        title: `Investigate ${subtopic}`,
-        instructions: 'Design a mini-research project on this topic',
-        materials: ['notebook', 'internet access', 'drawing materials'],
-        estimatedTime: '20 minutes'
-      });
-    }
-
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
     // Step 4: Apply modern template system if requested
@@ -424,7 +387,6 @@ export async function POST(request: NextRequest) {
         answerKey: finalWorksheetData.answerKey || [],
         createdAt: new Date().toISOString(),
         visualElements,
-        activities,
         currentEvents: processedCurrentEvents.map(event => ({
           id: `news_${Date.now()}`,
           title: event.title,
@@ -445,8 +407,7 @@ export async function POST(request: NextRequest) {
       console.error('[ENHANCED-WORKSHEET-API] Problematic data:', {
         title: finalWorksheetData.title,
         questionsCount: finalWorksheetData.questions?.length,
-        visualElementsCount: visualElements.length,
-        activitiesCount: activities.length
+        visualElementsCount: visualElements.length
       });
       
       // Return a simplified response if JSON fails

@@ -25,7 +25,6 @@ export interface WorksheetResponse {
   answerKey?: WorksheetAnswer[];
   createdAt: string;
   visualElements?: VisualElement[];
-  activities?: InteractiveActivity[];
   currentEvents?: NewsReference[];
   pedagogicalNotes?: string;
   difficultyProgression?: 'easy-to-hard' | 'mixed' | 'scaffolded';
@@ -69,16 +68,6 @@ export interface VisualElement {
   source: string;
   placement: 'header' | 'inline' | 'sidebar' | 'background';
   relatedQuestionIds?: string[];
-}
-
-export interface InteractiveActivity {
-  id: string;
-  type: 'cut-and-paste' | 'coloring' | 'maze' | 'word-search' | 'crossword' | 'matching-game' | 'role-play' | 'experiment';
-  title: string;
-  instructions: string;
-  materials?: string[];
-  estimatedTime?: string;
-  visualAids?: VisualElement[];
 }
 
 export interface NewsReference {

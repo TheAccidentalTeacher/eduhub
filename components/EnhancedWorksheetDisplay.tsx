@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { WorksheetResponse, VisualElement, InteractiveActivity } from '@/types/worksheet';
-import ActivityTemplate from './ActivityTemplate';
+import { WorksheetResponse, VisualElement } from '@/types/worksheet';
 import VisualElementDisplay from './VisualElementDisplay';
 
 interface EnhancedWorksheetDisplayProps {
@@ -178,11 +177,6 @@ export default function EnhancedWorksheetDisplay({
     );
   };
 
-  // Render interactive activities using specialized templates
-  const renderInteractiveActivity = (activity: InteractiveActivity) => {
-    return <ActivityTemplate key={activity.id} activity={activity} />;
-  };
-
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-purple-50 worksheet-container">
       <div className="max-w-5xl mx-auto">
@@ -286,19 +280,6 @@ export default function EnhancedWorksheetDisplay({
             </div>
             {worksheet.questions.map((question, index) => renderQuestion(question, index))}
           </div>
-
-          {/* Interactive Activities */}
-          {worksheet.activities && worksheet.activities.length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center mb-6">
-                <span className="text-2xl mr-3">🎮</span>
-                <h2 className="text-2xl font-bold text-gray-800">Interactive Activities</h2>
-              </div>
-              <div className="space-y-6">
-                {worksheet.activities.map((activity) => renderInteractiveActivity(activity))}
-              </div>
-            </div>
-          )}
 
           {/* Enhanced Answer Key */}
           {worksheet.answerKey && worksheet.answerKey.length > 0 && (

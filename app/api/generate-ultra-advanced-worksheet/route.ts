@@ -137,7 +137,6 @@ export async function POST(request: NextRequest) {
       answerKey: comprehensiveContent.answerKey || [],
       createdAt: new Date().toISOString(),
       visualElements,
-      activities: [], // Enhanced activities coming in future updates
       currentEvents: processedCurrentEvents,
       pedagogicalNotes: comprehensiveContent.teacherNotes || 
         `This worksheet uses advanced AI to adapt content for optimal ${gradeLevel} learning.`,

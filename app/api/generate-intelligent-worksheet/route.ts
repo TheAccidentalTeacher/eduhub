@@ -114,7 +114,6 @@ export async function POST(request: NextRequest) {
       answerKey: rawWorksheet.answerKey || [],
       createdAt: new Date().toISOString(),
       visualElements,
-      activities: rawWorksheet.activities || [],
       currentEvents: rawWorksheet.currentEvents || [],
       pedagogicalNotes: generatePedagogicalNotes(contentStrategy, pedagogicalFramework),
       difficultyProgression: contentStrategy.progressionType,
@@ -288,8 +287,7 @@ Return a JSON object with the following structure:
       "explanation": "why this is correct",
       "pedagogicalReasoning": "teaching strategy explanation"
     }
-  ],
-  "activities": [] // interactive activities if requested
+  ]
 }`;
 
   return { systemPrompt, userPrompt };

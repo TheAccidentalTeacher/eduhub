@@ -333,7 +333,7 @@ export default function WorksheetGenerator() {
               🚀 Use Enhanced AI Generation
             </label>
             <p className="text-white/70 text-sm mt-2 ml-8">
-              Includes images, interactive activities, and pedagogically optimized content
+              Includes images and pedagogically optimized content
             </p>
           </div>
 
@@ -375,7 +375,6 @@ export default function WorksheetGenerator() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
                     { value: 'standard', label: '📄 Standard', desc: 'Traditional Q&A format' },
-                    { value: 'interactive', label: '🎮 Interactive', desc: 'Hands-on activities' },
                     { value: 'story-based', label: '📚 Story-Based', desc: 'Narrative learning' },
                     { value: 'puzzle', label: '🧩 Puzzle', desc: 'Games and challenges' },
                     { value: 'hands-on', label: '🔬 Hands-On', desc: 'Experiments & crafts' }
