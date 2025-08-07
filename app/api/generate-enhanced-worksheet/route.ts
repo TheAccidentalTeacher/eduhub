@@ -9,6 +9,12 @@ import {
   searchEducationalGifs 
 } from '@/utils/apiServices';
 import { generateIntelligentImage } from '@/utils/intelligentImageService';
+import { 
+  analyzeUserChoicesAndCreateStrategy,
+  generateDetailedImagePrompt,
+  generateEducationalContent,
+  type UserChoiceAnalysis
+} from '@/utils/advancedEducationalEngine';
 
 // Initialize OpenAI client
 function getOpenAIClient() {
