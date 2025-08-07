@@ -209,90 +209,127 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[ENHANCED-WORKSHEET-API] Gathering visual and content resources...');
+    console.log('[ENHANCED-WORKSHEET-API] NEW APPROACH: Generating content first, then question-specific images...');
 
-    // Step 1: Generate diverse images to prevent repetition
-    const primaryImagePromise = generateIntelligentImage(topic, subtopic, gradeLevel, `primary image for ${learningObjective}`);
+    // STEP 1: Generate worksheet content WITHOUT images first
+    console.log('[ENHANCED-WORKSHEET-API] Step 1: Generating questions and content...');
+    const initialWorksheetData = await generateEnhancedWorksheet(
+      body,
+      [], // No images yet
+      [], // No current events yet  
+      []  // No activities yet
+    );
 
-    // Step 2: Gather additional visual and multimedia content in parallel  
-    const [
-      primaryImageResult,
-      topicImages,
-      currentEvents,
-      educationalGifs,
-      educationalVideos,
-      customIllustration
-    ] = await Promise.allSettled([
-      primaryImagePromise,
-      searchAllImages(`${subtopic} education children ${gradeLevel}`, 3), // Using our new diverse search
-      searchRelevantNews(topic, 2),
-      searchEducationalGifs(subtopic, 2),
-      searchEducationalVideos(subtopic, gradeLevel, 2),
-      generateCustomImage(`${subtopic} educational illustration for ${gradeLevel} students`)
+    // STEP 2: Generate current events and activities in parallel
+    const [currentEvents] = await Promise.allSettled([
+      searchRelevantNews(topic, 2)
     ]);
 
-    // Process results and handle any failures gracefully
-    const visualElements: VisualElement[] = [];
     let processedCurrentEvents: any[] = [];
-
-    // Priority 1: Add intelligent AI-generated image first (header position)
-    const primaryImage = primaryImageResult.status === 'fulfilled' ? primaryImageResult.value : null;
-    if (primaryImage) {
-      visualElements.push({
-        id: 'intelligent_primary',
-        type: primaryImage.method === 'educational_diagram' ? 'diagram' : 'illustration',
-        url: primaryImage.url,
-        description: primaryImage.description,
-        source: primaryImage.source,
-        placement: 'header'
-      });
-      console.log(`[ENHANCED-WORKSHEET-API] Added primary image via ${primaryImage.method}`);
-    }
-
-    // Priority 2: Add stock images (inline placement only, since header is taken)
-    if (topicImages.status === 'fulfilled' && topicImages.value.length > 0) {
-      topicImages.value.forEach((img, index) => {
-        visualElements.push({
-          id: `img_${index}`,
-          type: 'image',
-          url: img.url,
-          description: img.description,
-          source: img.source,
-          placement: 'inline' // Never header since intelligent image takes priority
-        });
-      });
-    }
-
-    // Add GIFs
-    if (educationalGifs.status === 'fulfilled' && educationalGifs.value.length > 0) {
-      educationalGifs.value.forEach((gif, index) => {
-        visualElements.push({
-          id: `gif_${index}`,
-          type: 'gif',
-          url: gif.url,
-          description: gif.title,
-          source: 'giphy',
-          placement: 'inline'
-        });
-      });
-    }
-
-    // Add custom illustration
-    if (customIllustration?.status === 'fulfilled' && customIllustration.value) {
-      visualElements.push({
-        id: 'custom_illustration',
-        type: 'illustration',
-        url: customIllustration.value.url,
-        description: customIllustration.value.prompt,
-        source: 'stability-ai',
-        placement: 'inline' // Changed from header to avoid conflicts
-      });
-    }
-
-    // Process current events
     if (currentEvents.status === 'fulfilled') {
       processedCurrentEvents = currentEvents.value;
     }
+
+    // STEP 3: Generate question-specific images (1 per question)
+    console.log('[ENHANCED-WORKSHEET-API] Step 2: Generating targeted images for each question...');
+    const visualElements: VisualElement[] = [];
+    const usedImagePrompts = new Set<string>(); // Track used prompts to prevent duplicates
+    
+    // Generate header image first
+    const headerImagePromise = generateIntelligentImage(
+      topic, 
+      subtopic, 
+      gradeLevel, 
+      `header illustration for ${topic} ${subtopic} worksheet`
+    );
+
+    // Generate question-specific images
+    const questionImagePromises = initialWorksheetData.questions.map(async (question: any, index: number) => {
+      // Create specific prompt for THIS question
+      const questionContent = question.question.substring(0, 150); // First 150 chars
+      const specificPrompt = `${topic} ${subtopic}: ${questionContent}`;
+      
+      // Check if we've already used this concept (prevent duplicates)
+      const promptKey = `${topic}_${subtopic}_${index}`;
+      if (usedImagePrompts.has(promptKey)) {
+        console.log(`[ENHANCED-WORKSHEET-API] Skipping duplicate image for question ${index + 1}`);
+        return null;
+      }
+      
+      usedImagePrompts.add(promptKey);
+      
+      try {
+        const imageResult = await generateIntelligentImage(
+          topic,
+          subtopic, 
+          gradeLevel,
+          specificPrompt
+        );
+        
+        if (imageResult) {
+          console.log(`[ENHANCED-WORKSHEET-API] Generated image for question ${index + 1}: ${imageResult.description.substring(0, 50)}...`);
+          
+          return {
+            questionIndex: index,
+            questionId: question.id,
+            imageData: imageResult
+          };
+        }
+        return null;
+      } catch (error) {
+        console.error(`[ENHANCED-WORKSHEET-API] Failed to generate image for question ${index + 1}:`, error);
+        return null;
+      }
+    });
+
+    // Wait for all images to generate
+    const [headerImageResult, ...questionImageResults] = await Promise.allSettled([
+      headerImagePromise,
+      ...questionImagePromises
+    ]);
+
+    // Process header image
+    if (headerImageResult.status === 'fulfilled' && headerImageResult.value) {
+      visualElements.push({
+        id: 'main_header',
+        type: headerImageResult.value.method === 'educational_diagram' ? 'diagram' : 'illustration',
+        url: headerImageResult.value.url,
+        description: headerImageResult.value.description,
+        source: headerImageResult.value.source,
+        placement: 'header'
+      });
+      console.log('[ENHANCED-WORKSHEET-API] Added header image');
+    }
+
+    // Process question-specific images and assign to questions
+    const updatedQuestions = [...initialWorksheetData.questions];
+    questionImageResults.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value && result.value.imageData) {
+        const { questionIndex, questionId, imageData } = result.value;
+        
+        // Add to visual elements
+        visualElements.push({
+          id: `question_${questionIndex}_image`,
+          type: imageData.method === 'educational_diagram' ? 'diagram' : 'illustration', 
+          url: imageData.url,
+          description: imageData.description,
+          source: imageData.source,
+          placement: 'inline',
+          relatedQuestionIds: [questionId]
+        });
+
+        // Assign image directly to the question
+        if (updatedQuestions[questionIndex]) {
+          updatedQuestions[questionIndex].visualAid = imageData.url;
+          updatedQuestions[questionIndex].visualDescription = imageData.description;
+        }
+        
+        console.log(`[ENHANCED-WORKSHEET-API] Assigned unique image to question ${questionIndex + 1}`);
+      }
+    });
+
+    // Update worksheet data with images
+    initialWorksheetData.questions = updatedQuestions;
 
     // Step 2: Create interactive activities based on grade level
     const activities: InteractiveActivity[] = [];
@@ -328,22 +365,14 @@ export async function POST(request: NextRequest) {
 
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
-    // Step 3: Generate comprehensive worksheet content
-    const worksheetData = await generateEnhancedWorksheet(
-      body,
-      visualElements,
-      processedCurrentEvents,
-      activities
-    );
-
-    // Step 4: Create enhanced response
+    // Step 4: Create enhanced response with question-specific images
     const worksheet: WorksheetResponse = {
       id: generateWorksheetId(),
-      title: worksheetData.title,
-      content: JSON.stringify(worksheetData),
-      questions: worksheetData.questions || [],
-      instructions: worksheetData.instructions,
-      answerKey: worksheetData.answerKey || [],
+      title: initialWorksheetData.title,
+      content: JSON.stringify(initialWorksheetData),
+      questions: initialWorksheetData.questions || [],
+      instructions: initialWorksheetData.instructions,
+      answerKey: initialWorksheetData.answerKey || [],
       createdAt: new Date().toISOString(),
       visualElements,
       activities,
@@ -355,11 +384,11 @@ export async function POST(request: NextRequest) {
         discussionPoints: [`How does this relate to ${subtopic}?`],
         ageAppropriate: true
       })),
-      pedagogicalNotes: worksheetData.pedagogicalNotes,
-      difficultyProgression: worksheetData.difficultyProgression
+      pedagogicalNotes: initialWorksheetData.pedagogicalNotes,
+      difficultyProgression: initialWorksheetData.difficultyProgression
     };
 
-    console.log('[ENHANCED-WORKSHEET-API] Successfully generated enhanced worksheet');
+    console.log(`[ENHANCED-WORKSHEET-API] Successfully generated worksheet with ${visualElements.length} unique images (${visualElements.filter(v => v.relatedQuestionIds).length} question-specific)`);
     return NextResponse.json(worksheet);
 
   } catch (error) {

@@ -28,10 +28,8 @@ export default function EnhancedWorksheetDisplay({
 
   // Render different question types with enhanced styling
   const renderQuestion = (question: any, index: number) => {
-    const relatedVisual = worksheet.visualElements?.find(v => 
-      v.relatedQuestionIds?.includes(question.id) || 
-      (v.placement === 'inline' && Math.random() > 0.7) // Randomly assign some inline visuals
-    );
+    // Use direct visualAid assignment from improved generation logic
+    const hasVisualAid = question.visualAid;
 
     return (
       <div key={question.id} className="question-item mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -55,10 +53,21 @@ export default function EnhancedWorksheetDisplay({
           </div>
         </div>
 
-        {/* Visual Aid for Question */}
-        {relatedVisual && (
+        {/* Question-Specific Visual Aid */}
+        {hasVisualAid && (
           <div className="mb-4">
-            {renderVisualElement(relatedVisual, 'medium')}
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <img 
+                src={question.visualAid} 
+                alt={question.visualDescription || "Question illustration"}
+                className="w-full h-64 object-cover"
+              />
+              {question.visualDescription && (
+                <div className="p-3 bg-gray-50 text-sm text-gray-600 italic">
+                  {question.visualDescription}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
