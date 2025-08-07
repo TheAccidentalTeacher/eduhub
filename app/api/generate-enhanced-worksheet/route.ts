@@ -84,12 +84,10 @@ Learning Objective: ${request.learningObjective}
 Style: ${request.style}
 Type: ${request.worksheetType || 'standard'}
 
-CRITICAL CONTENT SAFETY REQUIREMENTS:
-- All content must be age-appropriate and educationally sound
-- NO violence, weapons, inappropriate military imagery, or disturbing content
-- Focus on learning, understanding, and positive educational outcomes
-- For historical topics: emphasize learning, peace, cultural understanding
-- For sensitive subjects: use appropriate academic framing for the grade level
+CONTENT GUIDELINES:
+- Age-appropriate language and concepts for ${request.gradeLevel}
+- Educational focus with clear learning objectives
+- Professional classroom-appropriate presentation
 
 AVAILABLE VISUAL ELEMENTS:
 ${visualElements.map(v => `- ${v.description} (${v.type})`).join('\n')}

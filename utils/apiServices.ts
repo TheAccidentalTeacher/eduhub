@@ -119,49 +119,23 @@ export async function searchRelevantNews(topic: string, count: number = 2): Prom
   }
 }
 
-// Content safety filters for educational content
-function getEducationallyAppropriatePrompt(originalPrompt: string, gradeLevel: string): string {
-  const gradeNum = parseInt(gradeLevel.match(/\d+/)?.[0] || '1');
+// Educational content formatting for appropriate age levels
+function getEducationalPrompt(originalPrompt: string, gradeLevel: string): string {
+  const gradeNum = parseInt(gradeLevel.match(/\d+/)?.[0] || '5');
   
-  // Critical safety filters for sensitive topics
-  const sensitiveTopics = {
-    'war': 'historical maps and peaceful symbols',
-    'wars': 'historical timeline and peace symbols', 
-    'battle': 'historical documents and artifacts',
-    'conflict': 'historical timeline and cultural exchange',
-    'violence': 'peaceful learning environment',
-    'weapon': 'historical artifacts in museum setting',
-    'soldier': 'historical uniforms and flags only',
-    'military': 'historical symbols and national emblems'
-  };
+  // The ONLY rule: no children depicted in dangerous/inappropriate situations
+  const childSafetyPrompt = `Educational illustration: ${originalPrompt}, professional educational style, appropriate for ${gradeLevel} classroom use, no children in dangerous situations`;
   
-  let safePrompt = originalPrompt.toLowerCase();
-  
-  // Replace sensitive terms with educational alternatives
-  for (const [sensitive, replacement] of Object.entries(sensitiveTopics)) {
-    if (safePrompt.includes(sensitive)) {
-      safePrompt = replacement;
-      break;
-    }
-  }
-  
-  // Age-appropriate modifications
-  if (gradeNum <= 5) {
-    return `Simple educational illustration: ${safePrompt}, colorful cartoon style, happy children learning, classroom setting, no violence, no weapons, cheerful and safe`;
-  } else if (gradeNum <= 8) {
-    return `Educational diagram: ${safePrompt}, historical artifacts, maps, documents, museum display style, academic illustration, no violence`;
-  } else {
-    return `Academic illustration: ${safePrompt}, historical context, educational materials, scholarly presentation, appropriate for classroom`;
-  }
+  return childSafetyPrompt;
 }
 
-// Stability AI image generation with safety filters
+// Stability AI image generation 
 export async function generateCustomImage(prompt: string, gradeLevel: string = '5'): Promise<GeneratedImage | null> {
   const apiKey = process.env.STABILITY_AI_API_KEY;
   if (!apiKey) return null;
 
-  // Apply educational safety filters
-  const safePrompt = getEducationallyAppropriatePrompt(prompt, gradeLevel);
+  // Apply basic educational formatting
+  const educationalPrompt = getEducationalPrompt(prompt, gradeLevel);
 
   try {
     const response = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image', {
@@ -173,11 +147,11 @@ export async function generateCustomImage(prompt: string, gradeLevel: string = '
       body: JSON.stringify({
         text_prompts: [
           {
-            text: safePrompt,
+            text: educationalPrompt,
             weight: 1
           },
           {
-            text: 'violence, weapons, soldiers, military, war, fighting, blood, inappropriate, scary, disturbing',
+            text: 'children with weapons, children in combat, inappropriate child imagery',
             weight: -1
           }
         ],
