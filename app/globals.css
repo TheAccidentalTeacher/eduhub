@@ -131,13 +131,39 @@ body {
     page-break-after: avoid;
   }
   
-  .question-container {
+  .question-container, .question-item {
     page-break-inside: avoid;
     margin-bottom: 20px;
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
   }
   
   .answer-key {
     page-break-before: always;
+  }
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  /* Force readable colors for print */
+  * {
+    color: black !important;
+  }
+
+  .bg-gradient-to-r,
+  .bg-gradient-to-br,
+  .bg-blue-50,
+  .bg-green-50,
+  .bg-purple-50,
+  .bg-orange-50,
+  .bg-yellow-50,
+  .bg-amber-50 {
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
   }
 }
 
@@ -151,6 +177,12 @@ body {
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 16px;
   margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.question-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .question-item:last-child {
@@ -165,4 +197,59 @@ body {
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Visual Elements */
+.visual-element {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.visual-element:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Interactive Activity Styles */
+.activity-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.activity-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+}
+
+/* Cut and Paste Activity Styles */
+.cut-paste-area {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Responsive Design Enhancements */
+@media (max-width: 768px) {
+  .export-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .export-buttons button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .question-item {
+    padding: 1rem !important;
+  }
+
+  .visual-element img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
 }

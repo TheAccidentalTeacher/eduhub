@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { topicsData } from '@/data/topics';
 import { WorksheetRequest, WorksheetResponse } from '@/types/worksheet';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
+import EnhancedWorksheetDisplay from '@/components/EnhancedWorksheetDisplay';
 
 export default function WorksheetGenerator() {
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -102,129 +103,35 @@ export default function WorksheetGenerator() {
   };
 
   if (generatedWorksheet) {
+    const handleExport = async (type: 'pdf' | 'docx') => {
+      setIsExporting(type);
+      try {
+        toast.loading(`Generating ${type.toUpperCase()}...`, { id: `${type}-export` });
+        if (type === 'pdf') {
+          const { exportToPDF } = await import('@/utils/exportUtils');
+          exportToPDF(generatedWorksheet, 'worksheet-content');
+        } else {
+          const { exportToDocx } = await import('@/utils/exportUtils');
+          await exportToDocx(generatedWorksheet);
+        }
+        toast.success(`${type.toUpperCase()} exported successfully!`, { id: `${type}-export` });
+      } catch (error) {
+        toast.error(`Failed to export ${type.toUpperCase()}`, { id: `${type}-export` });
+      } finally {
+        setIsExporting(null);
+      }
+    };
+
+    const handlePrint = () => window.print();
+
     return (
-      <div className="min-h-screen p-6 bg-gray-50 worksheet-container">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 flex justify-between items-center flex-wrap gap-4 no-print">
-            <h1 className="text-3xl font-bold text-gray-800">{generatedWorksheet.title}</h1>
-            <div className="flex gap-3 flex-wrap export-buttons">
-              <button
-                onClick={async () => {
-                  setIsExporting('pdf');
-                  try {
-                    toast.loading('Generating PDF...', { id: 'pdf-export' });
-                    const { exportToPDF } = await import('@/utils/exportUtils');
-                    exportToPDF(generatedWorksheet, 'worksheet-content');
-                    toast.success('PDF exported successfully!', { id: 'pdf-export' });
-                  } catch (error) {
-                    toast.error('Failed to export PDF', { id: 'pdf-export' });
-                  } finally {
-                    setIsExporting(null);
-                  }
-                }}
-                disabled={isExporting === 'pdf'}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                {isExporting === 'pdf' ? '⏳' : '📄'} Export PDF
-              </button>
-              <button
-                onClick={async () => {
-                  setIsExporting('docx');
-                  try {
-                    toast.loading('Generating DOCX...', { id: 'docx-export' });
-                    const { exportToDocx } = await import('@/utils/exportUtils');
-                    await exportToDocx(generatedWorksheet);
-                    toast.success('DOCX exported successfully!', { id: 'docx-export' });
-                  } catch (error) {
-                    toast.error('Failed to export DOCX', { id: 'docx-export' });
-                  } finally {
-                    setIsExporting(null);
-                  }
-                }}
-                disabled={isExporting === 'docx'}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                {isExporting === 'docx' ? '⏳' : '📝'} Export DOCX
-              </button>
-              <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
-              >
-                🖨️ Print
-              </button>
-              <button
-                onClick={() => setGeneratedWorksheet(null)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Generate New Worksheet
-              </button>
-            </div>
-          </div>
-          
-          <div id="worksheet-content" className="bg-white rounded-lg shadow-lg p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Instructions</h2>
-              <p className="text-gray-700">{generatedWorksheet.instructions}</p>
-            </div>
-            
-            <div className="space-y-6">
-              {generatedWorksheet.questions.map((question, index) => (
-                <div key={question.id} className="question-item question-container">
-                  <h3 className="font-medium mb-2">
-                    {index + 1}. {question.question} ({question.points} points)
-                  </h3>
-                  
-                  {question.type === 'multiple-choice' && question.options && (
-                    <div className="space-y-1 ml-4">
-                      {question.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex items-center">
-                          <span className="mr-2">{String.fromCharCode(65 + optIndex)}.</span>
-                          <span>{option}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {question.type === 'fill-blank' && (
-                    <div className="ml-4">
-                      <div className="border-b border-gray-300 w-48 inline-block"></div>
-                    </div>
-                  )}
-                  
-                  {question.type === 'short-answer' && (
-                    <div className="ml-4">
-                      <div className="border border-gray-300 rounded p-3 h-20 bg-gray-50"></div>
-                    </div>
-                  )}
-                  
-                  {question.type === 'true-false' && (
-                    <div className="ml-4 space-x-4">
-                      <span>True ⬜</span>
-                      <span>False ⬜</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            
-            {generatedWorksheet.answerKey && generatedWorksheet.answerKey.length > 0 && (
-              <div className="mt-8 pt-8 border-t answer-key">
-                <h2 className="text-xl font-semibold mb-4">Answer Key</h2>
-                <div className="space-y-3">
-                  {generatedWorksheet.answerKey.map((answer, index) => (
-                    <div key={answer.questionId} className="bg-gray-50 p-3 rounded">
-                      <p><strong>Question {index + 1}:</strong> {Array.isArray(answer.answer) ? answer.answer.join(', ') : answer.answer}</p>
-                      {answer.explanation && (
-                        <p className="text-sm text-gray-600 mt-1">{answer.explanation}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <EnhancedWorksheetDisplay
+        worksheet={generatedWorksheet}
+        onExport={handleExport}
+        onPrint={handlePrint}
+        onGenerateNew={() => setGeneratedWorksheet(null)}
+        exportingType={isExporting}
+      />
     );
   }
 
