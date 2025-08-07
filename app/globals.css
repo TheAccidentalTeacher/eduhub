@@ -104,3 +104,65 @@ body {
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Print-friendly styles for worksheets */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  #worksheet-content {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    background: white !important;
+  }
+  
+  body {
+    background: white !important;
+    font-size: 12pt;
+    line-height: 1.4;
+    color: black !important;
+  }
+  
+  h1, h2, h3 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+  
+  .question-container {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+  
+  .answer-key {
+    page-break-before: always;
+  }
+}
+
+/* Enhanced worksheet display styles */
+.worksheet-container {
+  background: white;
+  min-height: 100vh;
+}
+
+.question-item {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.question-item:last-child {
+  border-bottom: none;
+}
+
+.export-buttons {
+  position: sticky;
+  top: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

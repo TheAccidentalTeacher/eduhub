@@ -13,6 +13,7 @@ export default function WorksheetGenerator() {
   const [selectedStyle, setSelectedStyle] = useState<'colorful' | 'minimal' | 'playful'>('colorful');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWorksheet, setGeneratedWorksheet] = useState<WorksheetResponse | null>(null);
+  const [isExporting, setIsExporting] = useState<'pdf' | 'docx' | null>(null);
 
   const gradeOptions = [
     'Pre-K', 'Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade',
@@ -94,19 +95,65 @@ export default function WorksheetGenerator() {
 
   if (generatedWorksheet) {
     return (
-      <div className="min-h-screen p-6 bg-gray-50">
+      <div className="min-h-screen p-6 bg-gray-50 worksheet-container">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-6 flex justify-between items-center flex-wrap gap-4 no-print">
             <h1 className="text-3xl font-bold text-gray-800">{generatedWorksheet.title}</h1>
-            <button
-              onClick={() => setGeneratedWorksheet(null)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Generate New Worksheet
-            </button>
+            <div className="flex gap-3 flex-wrap export-buttons">
+              <button
+                onClick={async () => {
+                  setIsExporting('pdf');
+                  try {
+                    toast.loading('Generating PDF...', { id: 'pdf-export' });
+                    const { exportToPDF } = await import('@/utils/exportUtils');
+                    exportToPDF(generatedWorksheet, 'worksheet-content');
+                    toast.success('PDF exported successfully!', { id: 'pdf-export' });
+                  } catch (error) {
+                    toast.error('Failed to export PDF', { id: 'pdf-export' });
+                  } finally {
+                    setIsExporting(null);
+                  }
+                }}
+                disabled={isExporting === 'pdf'}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isExporting === 'pdf' ? '⏳' : '📄'} Export PDF
+              </button>
+              <button
+                onClick={async () => {
+                  setIsExporting('docx');
+                  try {
+                    toast.loading('Generating DOCX...', { id: 'docx-export' });
+                    const { exportToDocx } = await import('@/utils/exportUtils');
+                    await exportToDocx(generatedWorksheet);
+                    toast.success('DOCX exported successfully!', { id: 'docx-export' });
+                  } catch (error) {
+                    toast.error('Failed to export DOCX', { id: 'docx-export' });
+                  } finally {
+                    setIsExporting(null);
+                  }
+                }}
+                disabled={isExporting === 'docx'}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isExporting === 'docx' ? '⏳' : '📝'} Export DOCX
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+              >
+                🖨️ Print
+              </button>
+              <button
+                onClick={() => setGeneratedWorksheet(null)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Generate New Worksheet
+              </button>
+            </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div id="worksheet-content" className="bg-white rounded-lg shadow-lg p-8">
             <div className="mb-6">
               <h2 className="text-xl font-semibold mb-2">Instructions</h2>
               <p className="text-gray-700">{generatedWorksheet.instructions}</p>
@@ -114,7 +161,7 @@ export default function WorksheetGenerator() {
             
             <div className="space-y-6">
               {generatedWorksheet.questions.map((question, index) => (
-                <div key={question.id} className="border-b pb-4">
+                <div key={question.id} className="question-item question-container">
                   <h3 className="font-medium mb-2">
                     {index + 1}. {question.question} ({question.points} points)
                   </h3>
@@ -153,7 +200,7 @@ export default function WorksheetGenerator() {
             </div>
             
             {generatedWorksheet.answerKey && generatedWorksheet.answerKey.length > 0 && (
-              <div className="mt-8 pt-8 border-t">
+              <div className="mt-8 pt-8 border-t answer-key">
                 <h2 className="text-xl font-semibold mb-4">Answer Key</h2>
                 <div className="space-y-3">
                   {generatedWorksheet.answerKey.map((answer, index) => (
