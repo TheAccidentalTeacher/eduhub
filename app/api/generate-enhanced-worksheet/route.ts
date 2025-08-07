@@ -20,7 +20,7 @@ import {
 import { 
   generateStructuredWorksheet, 
   integrateWithVisualEditor 
-} from '../../../enhanced-worksheet-template.js';
+} from '../../../enhanced-worksheet-template';
 
 // Initialize OpenAI client
 function getOpenAIClient() {
