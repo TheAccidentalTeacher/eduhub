@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { topicsData } from '@/data/topics';
-import { WorksheetRequest, WorksheetResponse } from '@/types/worksheet';
+import { WorksheetRequest, WorksheetResponse, LearningProfile } from '@/types/worksheet';
 import toast, { Toaster } from 'react-hot-toast';
 import EnhancedWorksheetDisplay from '@/components/EnhancedWorksheetDisplay';
+import LearningProfileManager from '@/components/LearningProfileManager';
+import AssessmentDashboard from '@/components/AssessmentDashboard';
 
 export default function WorksheetGenerator() {
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -19,6 +21,11 @@ export default function WorksheetGenerator() {
   const [includeCurrentEvents, setIncludeCurrentEvents] = useState(false);
   const [worksheetType, setWorksheetType] = useState<'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on'>('standard');
   const [useEnhancedGeneration, setUseEnhancedGeneration] = useState(true);
+  
+  // Step 3: Pedagogical Intelligence State
+  const [learningProfile, setLearningProfile] = useState<LearningProfile | null>(null);
+  const [enableIntelligentMode, setEnableIntelligentMode] = useState(false);
+  const [enableAdaptiveDifferentiation, setEnableAdaptiveDifferentiation] = useState(false);
 
   const gradeOptions = [
     'Pre-K', 'Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade',
@@ -54,17 +61,36 @@ export default function WorksheetGenerator() {
         includeVisuals,
         includeCurrentEvents,
         worksheetType,
+        // Step 3: Pedagogical Intelligence
+        learningProfile: learningProfile || undefined,
+        enableAdaptiveDifferentiation: enableAdaptiveDifferentiation
       };
 
       console.log('[WORKSHEET-GENERATOR] Request payload:', request);
 
-      const apiEndpoint = useEnhancedGeneration ? '/api/generate-enhanced-worksheet' : '/api/generate-worksheet';
+      // Choose API endpoint based on intelligent mode
+      let apiEndpoint = '/api/generate-worksheet';
+      if (enableIntelligentMode && learningProfile) {
+        apiEndpoint = '/api/generate-intelligent-worksheet';
+      } else if (useEnhancedGeneration) {
+        apiEndpoint = '/api/generate-enhanced-worksheet';
+      }
+      
+      console.log(`[WORKSHEET-GENERATOR] Using endpoint: ${apiEndpoint}`);
+      
       const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify({
+          ...request,
+          // Additional flags for intelligent generation
+          intelligentMode: enableIntelligentMode,
+          adaptToLearner: !!learningProfile,
+          generateAssessments: enableIntelligentMode,
+          includeRecommendations: enableIntelligentMode
+        }),
       });
 
       console.log('[WORKSHEET-GENERATOR] API response status:', response.status);
@@ -79,7 +105,15 @@ export default function WorksheetGenerator() {
       console.log('[WORKSHEET-GENERATOR] Successfully received worksheet:', worksheet.id);
       
       setGeneratedWorksheet(worksheet);
-      toast.success('Worksheet generated successfully!');
+      
+      // Enhanced success messaging based on generation type
+      if (enableIntelligentMode && learningProfile) {
+        toast.success(`🧠 Intelligent worksheet generated with pedagogical intelligence!`);
+      } else if (useEnhancedGeneration) {
+        toast.success('✨ Enhanced worksheet generated with visual elements!');
+      } else {
+        toast.success('📝 Worksheet generated successfully!');
+      }
       
     } catch (error) {
       console.error('[WORKSHEET-GENERATOR] Error generating worksheet:', error);
@@ -125,13 +159,16 @@ export default function WorksheetGenerator() {
     const handlePrint = () => window.print();
 
     return (
-      <EnhancedWorksheetDisplay
-        worksheet={generatedWorksheet}
-        onExport={handleExport}
-        onPrint={handlePrint}
-        onGenerateNew={() => setGeneratedWorksheet(null)}
-        exportingType={isExporting}
-      />
+      <>
+        <AssessmentDashboard worksheet={generatedWorksheet} />
+        <EnhancedWorksheetDisplay
+          worksheet={generatedWorksheet}
+          onExport={handleExport}
+          onPrint={handlePrint}
+          onGenerateNew={() => setGeneratedWorksheet(null)}
+          exportingType={isExporting}
+        />
+      </>
     );
   }
 
@@ -141,6 +178,12 @@ export default function WorksheetGenerator() {
         <h1 className="hero-title text-4xl md:text-5xl font-bold text-center mb-8 font-playfair">
           AI Worksheet Generator
         </h1>
+        
+        {/* Step 3: Learning Profile Manager */}
+        <LearningProfileManager 
+          onProfileChange={setLearningProfile}
+          currentProfile={learningProfile}
+        />
         
         <div className="app-container p-8 md:p-10">
           {/* Topic Selection */}
@@ -252,6 +295,36 @@ export default function WorksheetGenerator() {
             <p className="text-white/70 text-sm mt-2 ml-8">
               Includes images, interactive activities, and pedagogically optimized content
             </p>
+          </div>
+
+          {/* Step 3: Intelligent Generation Toggle */}
+          <div className="mb-8">
+            <label className="flex items-center text-white text-lg font-semibold">
+              <input
+                type="checkbox"
+                checked={enableIntelligentMode}
+                onChange={(e) => setEnableIntelligentMode(e.target.checked)}
+                className="mr-3 w-5 h-5 rounded border-white/30 bg-white/20 text-purple-500 focus:ring-purple-500 focus:ring-2"
+              />
+              🧠 Enable Pedagogical Intelligence
+            </label>
+            <p className="text-white/70 text-sm mt-2 ml-8">
+              Advanced educational AI with learning profiles, assessment rubrics, and adaptive recommendations
+            </p>
+            
+            {enableIntelligentMode && (
+              <div className="mt-4 ml-8">
+                <label className="flex items-center text-white/90 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={enableAdaptiveDifferentiation}
+                    onChange={(e) => setEnableAdaptiveDifferentiation(e.target.checked)}
+                    className="mr-2 w-4 h-4 rounded border-white/30 bg-white/20 text-purple-500 focus:ring-purple-500 focus:ring-1"
+                  />
+                  Generate differentiated versions for multiple learning levels
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Enhanced Options */}

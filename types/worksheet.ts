@@ -8,6 +8,11 @@ export interface WorksheetRequest {
   includeVisuals?: boolean;
   includeCurrentEvents?: boolean;
   worksheetType?: 'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on';
+  // Step 3: Pedagogical Intelligence
+  learningProfile?: LearningProfile;
+  pedagogicalFramework?: Partial<PedagogicalFramework>;
+  assessmentCriteria?: Partial<AssessmentCriteria>;
+  enableAdaptiveDifferentiation?: boolean;
 }
 
 export interface WorksheetResponse {
@@ -23,6 +28,17 @@ export interface WorksheetResponse {
   currentEvents?: NewsReference[];
   pedagogicalNotes?: string;
   difficultyProgression?: 'easy-to-hard' | 'mixed' | 'scaffolded';
+  // Step 3: Pedagogical Intelligence
+  pedagogicalFramework?: PedagogicalFramework;
+  assessmentCriteria?: AssessmentCriteria;
+  adaptiveRecommendations?: AdaptiveRecommendation[];
+  learningAnalytics?: LearningAnalytics;
+  differentiatedVersions?: {
+    belowGrade?: Partial<WorksheetResponse>;
+    aboveGrade?: Partial<WorksheetResponse>;
+    specialNeeds?: Partial<WorksheetResponse>;
+    ell?: Partial<WorksheetResponse>;
+  };
 }
 
 export interface WorksheetQuestion {
@@ -76,4 +92,62 @@ export interface NewsReference {
 export interface TopicData {
   topic: string;
   subtopics: string[];
+}
+
+// Step 3: Advanced Pedagogical Intelligence Types
+
+export interface LearningProfile {
+  id: string;
+  learningStyle: 'visual' | 'auditory' | 'kinesthetic' | 'reading-writing';
+  difficultyLevel: 'below-grade' | 'on-grade' | 'above-grade' | 'gifted';
+  specialNeeds?: 'dyslexia' | 'adhd' | 'autism' | 'visual-impairment' | 'hearing-impairment';
+  englishLanguageLearner?: boolean;
+  interests?: string[];
+  strengths?: string[];
+  challenges?: string[];
+  accommodations?: string[];
+}
+
+export interface PedagogicalFramework {
+  bloomsLevel: 'remember' | 'understand' | 'apply' | 'analyze' | 'evaluate' | 'create';
+  dokLevel: 1 | 2 | 3 | 4; // Webb's Depth of Knowledge
+  multipleIntelligence: 'linguistic' | 'logical-mathematical' | 'spatial' | 'bodily-kinesthetic' | 
+                       'musical' | 'interpersonal' | 'intrapersonal' | 'naturalist';
+  udlPrinciple: 'engagement' | 'representation' | 'action-expression';
+  cognitiveLoad: 'low' | 'medium' | 'high';
+}
+
+export interface AssessmentCriteria {
+  type: 'formative' | 'summative' | 'diagnostic' | 'self-assessment';
+  rubric?: RubricCriteria[];
+  successCriteria: string[];
+  learningObjectives: string[];
+  standardsAlignment?: string[];
+}
+
+export interface RubricCriteria {
+  criterion: string;
+  levels: {
+    level: number;
+    description: string;
+    points: number;
+  }[];
+}
+
+export interface AdaptiveRecommendation {
+  type: 'next-steps' | 'prerequisite' | 'extension' | 'remediation' | 'accommodation';
+  title: string;
+  description: string;
+  reasoning: string;
+  resources?: string[];
+  estimatedTime?: string;
+}
+
+export interface LearningAnalytics {
+  completionTime?: number;
+  difficultyRating?: number;
+  engagementLevel?: 'low' | 'medium' | 'high';
+  masteryLevel?: 'not-met' | 'approaching' | 'met' | 'exceeded';
+  strugglingAreas?: string[];
+  strengthAreas?: string[];
 }
