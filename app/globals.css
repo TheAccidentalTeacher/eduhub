@@ -12,18 +12,9 @@
   --generate-gradient: linear-gradient(90deg, #f6d365 0%, #ff7850 100%);
 }
 
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-}
-
 body {
   font-family: 'Inter', sans-serif;
   background-color: #f8fafc;
-  font-size: 1rem;
-  line-height: 1.5;
-  min-width: 320px;
 }
 
 .hero-title {
@@ -218,26 +209,27 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Clean image display - no text overlays */
-.visual-element img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0.75rem;
+/* Interactive Activity Styles */
+.activity-container {
+  position: relative;
+  overflow: hidden;
 }
 
-/* Ensure image containers fill space completely */
-.visual-element > div > div {
-  width: 100%;
-  height: 100%;
+.activity-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
 }
 
-/* Full-width images for educational content */
-.visual-element.fullwidth img {
-  max-width: 100%;
-  width: 100%;
-  height: auto;
-  min-height: 200px;
+/* Cut and Paste Activity Styles */
+.cut-paste-area {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0);
+  background-size: 20px 20px;
 }
 
 /* Responsive Design Enhancements */

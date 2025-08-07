@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { WorksheetResponse, VisualElement } from '@/types/worksheet';
+import { WorksheetResponse, VisualElement, InteractiveActivity } from '@/types/worksheet';
+import ActivityTemplate from './ActivityTemplate';
 import VisualElementDisplay from './VisualElementDisplay';
 
 interface EnhancedWorksheetDisplayProps {
@@ -27,8 +28,10 @@ export default function EnhancedWorksheetDisplay({
 
   // Render different question types with enhanced styling
   const renderQuestion = (question: any, index: number) => {
-    // Use direct visualAid assignment from improved generation logic
-    const hasVisualAid = question.visualAid;
+    const relatedVisual = worksheet.visualElements?.find(v => 
+      v.relatedQuestionIds?.includes(question.id) || 
+      (v.placement === 'inline' && Math.random() > 0.7) // Randomly assign some inline visuals
+    );
 
     return (
       <div key={question.id} className="question-item mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -52,21 +55,10 @@ export default function EnhancedWorksheetDisplay({
           </div>
         </div>
 
-        {/* Question-Specific Visual Aid */}
-        {hasVisualAid && (
+        {/* Visual Aid for Question */}
+        {relatedVisual && (
           <div className="mb-4">
-            <div className="rounded-xl overflow-hidden shadow-lg">
-              <img 
-                src={question.visualAid} 
-                alt={question.visualDescription || "Question illustration"}
-                className="w-full h-64 object-cover"
-              />
-              {question.visualDescription && (
-                <div className="p-3 bg-gray-50 text-sm text-gray-600 italic">
-                  {question.visualDescription}
-                </div>
-              )}
-            </div>
+            {renderVisualElement(relatedVisual, 'medium')}
           </div>
         )}
 
@@ -85,25 +77,14 @@ export default function EnhancedWorksheetDisplay({
         <div className="ml-2">
           {question.type === 'multiple-choice' && question.options && (
             <div className="space-y-3">
-              {(() => {
-                // Handle both array and object formats for options
-                let optionsArray: string[] = [];
-                if (Array.isArray(question.options)) {
-                  optionsArray = question.options;
-                } else if (typeof question.options === 'object') {
-                  // If options is an object, convert keys to array
-                  optionsArray = Object.keys(question.options);
-                }
-                
-                return optionsArray.map((option: string, optIndex: number) => (
-                  <div key={optIndex} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-                    <div className="w-6 h-6 border-2 border-blue-400 rounded-full mr-4 flex items-center justify-center font-bold text-blue-600">
-                      {String.fromCharCode(65 + optIndex)}
-                    </div>
-                    <span className="text-gray-700">{option}</span>
+              {question.options.map((option: string, optIndex: number) => (
+                <div key={optIndex} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
+                  <div className="w-6 h-6 border-2 border-blue-400 rounded-full mr-4 flex items-center justify-center font-bold text-blue-600">
+                    {String.fromCharCode(65 + optIndex)}
                   </div>
-                ));
-              })()}
+                  <span className="text-gray-700">{option}</span>
+                </div>
+              ))}
             </div>
           )}
 
@@ -175,6 +156,11 @@ export default function EnhancedWorksheetDisplay({
         </div>
       </div>
     );
+  };
+
+  // Render interactive activities using specialized templates
+  const renderInteractiveActivity = (activity: InteractiveActivity) => {
+    return <ActivityTemplate key={activity.id} activity={activity} />;
   };
 
   return (
@@ -280,6 +266,19 @@ export default function EnhancedWorksheetDisplay({
             </div>
             {worksheet.questions.map((question, index) => renderQuestion(question, index))}
           </div>
+
+          {/* Interactive Activities */}
+          {worksheet.activities && worksheet.activities.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center mb-6">
+                <span className="text-2xl mr-3">🎮</span>
+                <h2 className="text-2xl font-bold text-gray-800">Interactive Activities</h2>
+              </div>
+              <div className="space-y-6">
+                {worksheet.activities.map((activity) => renderInteractiveActivity(activity))}
+              </div>
+            </div>
+          )}
 
           {/* Enhanced Answer Key */}
           {worksheet.answerKey && worksheet.answerKey.length > 0 && (

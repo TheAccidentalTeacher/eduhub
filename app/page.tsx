@@ -13,15 +13,14 @@ export default function WorksheetGenerator() {
   const [selectedSubtopic, setSelectedSubtopic] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [learningObjective, setLearningObjective] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState<'colorful' | 'minimal' | 'playful' | 'modern-blue' | 'professional'>('colorful');
+  const [selectedStyle, setSelectedStyle] = useState<'colorful' | 'minimal' | 'playful'>('colorful');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWorksheet, setGeneratedWorksheet] = useState<WorksheetResponse | null>(null);
   const [isExporting, setIsExporting] = useState<'pdf' | 'docx' | null>(null);
   const [includeVisuals, setIncludeVisuals] = useState(true);
   const [includeCurrentEvents, setIncludeCurrentEvents] = useState(false);
-  const [worksheetType, setWorksheetType] = useState<'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on' | 'modern-template'>('standard');
+  const [worksheetType, setWorksheetType] = useState<'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on'>('standard');
   const [useEnhancedGeneration, setUseEnhancedGeneration] = useState(true);
-  const [useModernTemplates, setUseModernTemplates] = useState(true);
   
   // Step 3: Pedagogical Intelligence State
   const [learningProfile, setLearningProfile] = useState<LearningProfile | null>(null);
@@ -62,8 +61,6 @@ export default function WorksheetGenerator() {
         includeVisuals,
         includeCurrentEvents,
         worksheetType,
-        // NEW: Modern template system
-        useModernTemplates,
         // Step 3: Pedagogical Intelligence
         learningProfile: learningProfile || undefined,
         enableAdaptiveDifferentiation: enableAdaptiveDifferentiation
@@ -146,15 +143,14 @@ export default function WorksheetGenerator() {
         toast.loading(`Generating ${type.toUpperCase()}...`, { id: `${type}-export` });
         if (type === 'pdf') {
           const { exportToPDF } = await import('@/utils/exportUtils');
-          await exportToPDF(generatedWorksheet, 'worksheet-content');
+          exportToPDF(generatedWorksheet, 'worksheet-content');
         } else {
           const { exportToDocx } = await import('@/utils/exportUtils');
           await exportToDocx(generatedWorksheet);
         }
         toast.success(`${type.toUpperCase()} exported successfully!`, { id: `${type}-export` });
       } catch (error) {
-        console.error(`Export error:`, error);
-        toast.error(`Failed to export ${type.toUpperCase()}: ${error instanceof Error ? error.message : 'Unknown error'}`, { id: `${type}-export` });
+        toast.error(`Failed to export ${type.toUpperCase()}`, { id: `${type}-export` });
       } finally {
         setIsExporting(null);
       }
@@ -177,9 +173,9 @@ export default function WorksheetGenerator() {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6">
-      <div className="max-w-4xl w-full mx-auto py-8">
-        <h1 className="hero-title text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 font-playfair">
+    <div className="min-h-screen p-6 flex flex-col items-center justify-center">
+      <div className="max-w-4xl w-full mx-auto">
+        <h1 className="hero-title text-4xl md:text-5xl font-bold text-center mb-8 font-playfair">
           AI Worksheet Generator
         </h1>
         
@@ -257,7 +253,7 @@ export default function WorksheetGenerator() {
           {/* Style Preference */}
           <div className="mb-10">
             <label className="block text-white text-xl font-semibold mb-3">Style Preference</label>
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => setSelectedStyle('colorful')}
                 className={`style-btn bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 rounded-xl font-medium transition-all hover:scale-105 ${
@@ -283,42 +279,6 @@ export default function WorksheetGenerator() {
                 🎯 Playful
               </button>
             </div>
-            
-            {/* NEW: Modern Professional Templates */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setSelectedStyle('modern-blue')}
-                className={`style-btn bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-medium transition-all hover:scale-105 ${
-                  selectedStyle === 'modern-blue' ? 'active ring-2 ring-white' : ''
-                }`}
-              >
-                🏫 Modern Education
-              </button>
-              <button
-                onClick={() => setSelectedStyle('professional')}
-                className={`style-btn bg-gradient-to-r from-slate-600 to-gray-600 text-white py-3 rounded-xl font-medium transition-all hover:scale-105 ${
-                  selectedStyle === 'professional' ? 'active ring-2 ring-white' : ''
-                }`}
-              >
-                📋 Professional
-              </button>
-            </div>
-          </div>
-          
-          {/* NEW: Modern Template Toggle */}
-          <div className="mb-8">
-            <label className="flex items-center text-white text-lg font-semibold">
-              <input
-                type="checkbox"
-                checked={useModernTemplates}
-                onChange={(e) => setUseModernTemplates(e.target.checked)}
-                className="mr-3 w-5 h-5 rounded border-white/30 bg-white/20 text-blue-500 focus:ring-blue-500 focus:ring-2"
-              />
-              🎨 Use Modern Template System
-            </label>
-            <p className="text-white/70 text-sm mt-2 ml-8">
-              Professional blue-themed layouts with enhanced visual design
-            </p>
           </div>
           
           {/* Enhanced Generation Toggle */}
@@ -333,7 +293,7 @@ export default function WorksheetGenerator() {
               🚀 Use Enhanced AI Generation
             </label>
             <p className="text-white/70 text-sm mt-2 ml-8">
-              Includes images and pedagogically optimized content
+              Includes images, interactive activities, and pedagogically optimized content
             </p>
           </div>
 
@@ -375,6 +335,7 @@ export default function WorksheetGenerator() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
                     { value: 'standard', label: '📄 Standard', desc: 'Traditional Q&A format' },
+                    { value: 'interactive', label: '🎮 Interactive', desc: 'Hands-on activities' },
                     { value: 'story-based', label: '📚 Story-Based', desc: 'Narrative learning' },
                     { value: 'puzzle', label: '🧩 Puzzle', desc: 'Games and challenges' },
                     { value: 'hands-on', label: '🔬 Hands-On', desc: 'Experiments & crafts' }

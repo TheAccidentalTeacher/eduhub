@@ -212,16 +212,17 @@ export async function generateWithStability(prompt: string, uniqueId?: string): 
 // Educational Diagram Generator (using simple graphics)
 export async function generateEducationalDiagram(topic: string, subtopic: string, uniqueId?: string): Promise<GeneratedImageResult | null> {
   // For sensitive topics, create simple educational diagrams with unique elements
-  const randomColor = ['f0f8ff', 'fff5ee', 'f0fff0', 'fffaf0', 'f5f5dc'][Math.floor(Math.random() * 5)];
-  const randomTextColor = ['2c3e50', '8b4513', '228b22', 'ff8c00', '4b0082'][Math.floor(Math.random() * 5)];
-  const uniqueParam = uniqueId ? `+${Math.random().toString(36).substr(2, 5)}` : '';
+  const colors = ['4A90E2', '7ED321', 'F5A623', 'D0021B', '9013FE'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  const uniqueParam = uniqueId ? `_${Math.random().toString(36).substr(2, 5)}` : '';
   
+  // Use proper placeholder.com URLs that actually work
   const diagramTypes: { [key: string]: string } = {
-    'firearm': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Educational+Diagram%3A+Types+and+Safety${uniqueParam}`,
-    'weapon': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Educational+Safety+Information${uniqueParam}`,
-    'history': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Historical+Timeline+Diagram${uniqueParam}`,
-    'science': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Scientific+Process+Diagram${uniqueParam}`,
-    'math': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Mathematical+Concept+Chart${uniqueParam}`
+    'firearm': `https://via.placeholder.com/800x600/${randomColor}/FFFFFF?text=Educational+Safety+Diagram${uniqueParam}`,
+    'weapon': `https://via.placeholder.com/800x600/${randomColor}/FFFFFF?text=Safety+Information${uniqueParam}`,
+    'history': `https://via.placeholder.com/800x600/${randomColor}/FFFFFF?text=Historical+Timeline${uniqueParam}`,
+    'science': `https://via.placeholder.com/800x600/${randomColor}/FFFFFF?text=Scientific+Process${uniqueParam}`,
+    'math': `https://via.placeholder.com/800x600/${randomColor}/FFFFFF?text=Mathematical+Concept${uniqueParam}`
   };
 
   console.log(`[DIAGRAM] Generating educational diagram (${uniqueId}) for: ${topic}/${subtopic}`);

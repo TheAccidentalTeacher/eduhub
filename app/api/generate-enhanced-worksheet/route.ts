@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { WorksheetRequest, WorksheetResponse, VisualElement } from '@/types/worksheet';
+import { WorksheetRequest, WorksheetResponse, VisualElement, InteractiveActivity } from '@/types/worksheet';
 import { 
   searchAllImages, 
   searchRelevantNews, 
@@ -8,19 +8,6 @@ import {
   searchEducationalVideos,
   searchEducationalGifs 
 } from '@/utils/apiServices';
-import { generateIntelligentImage } from '@/utils/intelligentImageService';
-import { 
-  analyzeUserChoicesAndCreateStrategy,
-  generateDetailedImagePrompt,
-  generateEducationalContent,
-  type UserChoiceAnalysis
-} from '@/utils/advancedEducationalEngine';
-
-// Import the new template system
-import { 
-  generateStructuredWorksheet, 
-  integrateWithVisualEditor 
-} from '../../../enhanced-worksheet-template';
 
 // Initialize OpenAI client
 function getOpenAIClient() {
@@ -75,7 +62,8 @@ function getPedagogicalPrompt(gradeLevel: string, topic: string, subtopic: strin
 async function generateEnhancedWorksheet(
   request: WorksheetRequest,
   visualElements: VisualElement[],
-  currentEvents: any[]
+  currentEvents: any[],
+  activities: InteractiveActivity[]
 ): Promise<any> {
   const openai = getOpenAIClient();
   
@@ -96,11 +84,21 @@ Learning Objective: ${request.learningObjective}
 Style: ${request.style}
 Type: ${request.worksheetType || 'standard'}
 
+CRITICAL CONTENT SAFETY REQUIREMENTS:
+- All content must be age-appropriate and educationally sound
+- NO violence, weapons, inappropriate military imagery, or disturbing content
+- Focus on learning, understanding, and positive educational outcomes
+- For historical topics: emphasize learning, peace, cultural understanding
+- For sensitive subjects: use appropriate academic framing for the grade level
+
 AVAILABLE VISUAL ELEMENTS:
 ${visualElements.map(v => `- ${v.description} (${v.type})`).join('\n')}
 
 CURRENT EVENTS AVAILABLE:
 ${currentEvents.map(e => `- ${e.title}: ${e.description}`).join('\n')}
+
+INTERACTIVE ACTIVITIES PLANNED:
+${activities.map(a => `- ${a.title} (${a.type})`).join('\n')}
 
 CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
 
@@ -134,7 +132,7 @@ Format as structured JSON with:
       "id": "unique_id",
       "type": "question_type",
       "question": "Well-crafted question",
-      "options": ["option1", "option2", "option3", "option4"],
+      "options": ["array if multiple choice"],
       "points": number,
       "bloomsLevel": "cognitive_level",
       "visualAidId": "id_if_applicable",
@@ -152,10 +150,6 @@ Format as structured JSON with:
   "pedagogicalNotes": "Teaching strategies and tips",
   "difficultyProgression": "how_questions_build_complexity"
 }
-
-IMPORTANT: For multiple choice questions, "options" must be an array of strings, NOT an object. Example:
-✅ CORRECT: "options": ["First option", "Second option", "Third option", "Fourth option"]
-❌ WRONG: "options": {"First option": "value", "Second option": "value"}
 
 Make this worksheet truly engaging and educational for ${request.gradeLevel} students!
 `;
@@ -179,20 +173,7 @@ Make this worksheet truly engaging and educational for ${request.gradeLevel} stu
   const response = completion.choices[0]?.message?.content;
   if (!response) throw new Error('No response from OpenAI');
 
-  const parsedData = JSON.parse(response);
-  
-  // Fix any malformed options (objects instead of arrays)
-  if (parsedData.questions) {
-    parsedData.questions = parsedData.questions.map((question: any) => {
-      if (question.options && typeof question.options === 'object' && !Array.isArray(question.options)) {
-        // Convert object to array by taking the keys
-        question.options = Object.keys(question.options);
-      }
-      return question;
-    });
-  }
-  
-  return parsedData;
+  return JSON.parse(response);
 }
 
 // Main API endpoint
@@ -211,226 +192,146 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[ENHANCED-WORKSHEET-API] NEW APPROACH: Generating content first, then question-specific images...');
+    console.log('[ENHANCED-WORKSHEET-API] Gathering visual and content resources...');
 
-    // STEP 1: Generate worksheet content WITHOUT images first
-    console.log('[ENHANCED-WORKSHEET-API] Step 1: Generating questions and content...');
-    const initialWorksheetData = await generateEnhancedWorksheet(
-      body,
-      [], // No images yet
-      []  // No current events yet  
-    );
-
-    // STEP 2: Generate current events and activities in parallel
-    const [currentEvents] = await Promise.allSettled([
-      searchRelevantNews(topic, 2)
+    // Step 1: Gather visual and multimedia content in parallel
+    const [
+      topicImages,
+      currentEvents,
+      educationalGifs,
+      educationalVideos,
+      customIllustration
+    ] = await Promise.allSettled([
+      searchAllImages(`${subtopic} education children ${gradeLevel}`, 4),
+      searchRelevantNews(topic, 2),
+      searchEducationalGifs(subtopic, 2),
+      searchEducationalVideos(subtopic, gradeLevel, 2),
+      generateCustomImage(`${subtopic} educational illustration`, gradeLevel)
     ]);
 
+    // Process results and handle any failures gracefully
+    const visualElements: VisualElement[] = [];
     let processedCurrentEvents: any[] = [];
+
+    // Add images
+    if (topicImages.status === 'fulfilled' && topicImages.value.length > 0) {
+      topicImages.value.forEach((img, index) => {
+        visualElements.push({
+          id: `img_${index}`,
+          type: 'image',
+          url: img.url,
+          description: img.description,
+          source: img.source,
+          placement: index === 0 ? 'header' : 'inline'
+        });
+      });
+    }
+
+    // Add GIFs
+    if (educationalGifs.status === 'fulfilled' && educationalGifs.value.length > 0) {
+      educationalGifs.value.forEach((gif, index) => {
+        visualElements.push({
+          id: `gif_${index}`,
+          type: 'gif',
+          url: gif.url,
+          description: gif.title,
+          source: 'giphy',
+          placement: 'inline'
+        });
+      });
+    }
+
+    // Add custom illustration
+    if (customIllustration.status === 'fulfilled' && customIllustration.value) {
+      visualElements.push({
+        id: 'custom_illustration',
+        type: 'illustration',
+        url: customIllustration.value.url,
+        description: customIllustration.value.prompt,
+        source: 'stability-ai',
+        placement: 'header'
+      });
+    }
+
+    // Process current events
     if (currentEvents.status === 'fulfilled') {
       processedCurrentEvents = currentEvents.value;
     }
 
-    // STEP 3: Generate question-specific images (1 per question)
-    console.log('[ENHANCED-WORKSHEET-API] Step 2: Generating targeted images for each question...');
-    const visualElements: VisualElement[] = [];
-    const usedImagePrompts = new Set<string>(); // Track used prompts to prevent duplicates
+    // Step 2: Create interactive activities based on grade level
+    const activities: InteractiveActivity[] = [];
     
-    // Generate header image first
-    const headerImagePromise = generateIntelligentImage(
-      topic, 
-      subtopic, 
-      gradeLevel, 
-      `header illustration for ${topic} ${subtopic} worksheet`
-    );
-
-    // Generate question-specific images
-    const questionImagePromises = initialWorksheetData.questions.map(async (question: any, index: number) => {
-      // Create specific prompt for THIS question
-      const questionContent = question.question.substring(0, 150); // First 150 chars
-      const specificPrompt = `${topic} ${subtopic}: ${questionContent}`;
-      
-      // Check if we've already used this concept (prevent duplicates)
-      const promptKey = `${topic}_${subtopic}_${index}`;
-      if (usedImagePrompts.has(promptKey)) {
-        console.log(`[ENHANCED-WORKSHEET-API] Skipping duplicate image for question ${index + 1}`);
-        return null;
-      }
-      
-      usedImagePrompts.add(promptKey);
-      
-      try {
-        const imageResult = await generateIntelligentImage(
-          topic,
-          subtopic, 
-          gradeLevel,
-          specificPrompt
-        );
-        
-        if (imageResult) {
-          console.log(`[ENHANCED-WORKSHEET-API] Generated image for question ${index + 1}: ${imageResult.description.substring(0, 50)}...`);
-          
-          return {
-            questionIndex: index,
-            questionId: question.id,
-            imageData: imageResult
-          };
-        }
-        return null;
-      } catch (error) {
-        console.error(`[ENHANCED-WORKSHEET-API] Failed to generate image for question ${index + 1}:`, error);
-        return null;
-      }
-    });
-
-    // Wait for all images to generate
-    const [headerImageResult, ...questionImageResults] = await Promise.allSettled([
-      headerImagePromise,
-      ...questionImagePromises
-    ]);
-
-    // Process header image
-    if (headerImageResult.status === 'fulfilled' && headerImageResult.value) {
-      visualElements.push({
-        id: 'main_header',
-        type: headerImageResult.value.method === 'educational_diagram' ? 'diagram' : 'illustration',
-        url: headerImageResult.value.url,
-        description: headerImageResult.value.description,
-        source: headerImageResult.value.source,
-        placement: 'header'
+    // Age-appropriate activities
+    const gradeNum = parseInt(gradeLevel.match(/\d+/)?.[0] || '1');
+    if (gradeNum <= 3) {
+      activities.push({
+        id: 'coloring_activity',
+        type: 'coloring',
+        title: `Color the ${subtopic} Scene`,
+        instructions: 'Color the picture while thinking about what you learned',
+        estimatedTime: '10 minutes'
       });
-      console.log('[ENHANCED-WORKSHEET-API] Added header image');
+    } else if (gradeNum <= 6) {
+      activities.push({
+        id: 'matching_game',
+        type: 'matching-game',
+        title: `${subtopic} Connections`,
+        instructions: 'Draw lines to match related concepts',
+        estimatedTime: '8 minutes'
+      });
+    } else {
+      activities.push({
+        id: 'research_project',
+        type: 'experiment',
+        title: `Investigate ${subtopic}`,
+        instructions: 'Design a mini-research project on this topic',
+        materials: ['notebook', 'internet access', 'drawing materials'],
+        estimatedTime: '20 minutes'
+      });
     }
-
-    // Process question-specific images and assign to questions
-    const updatedQuestions = [...initialWorksheetData.questions];
-    questionImageResults.forEach((result, index) => {
-      if (result.status === 'fulfilled' && result.value && result.value.imageData) {
-        const { questionIndex, questionId, imageData } = result.value;
-        
-        // Add to visual elements
-        visualElements.push({
-          id: `question_${questionIndex}_image`,
-          type: imageData.method === 'educational_diagram' ? 'diagram' : 'illustration', 
-          url: imageData.url,
-          description: imageData.description,
-          source: imageData.source,
-          placement: 'inline',
-          relatedQuestionIds: [questionId]
-        });
-
-        // Assign image directly to the question
-        if (updatedQuestions[questionIndex]) {
-          updatedQuestions[questionIndex].visualAid = imageData.url;
-          updatedQuestions[questionIndex].visualDescription = imageData.description;
-        }
-        
-        console.log(`[ENHANCED-WORKSHEET-API] Assigned unique image to question ${questionIndex + 1}`);
-      }
-    });
-
-    // Update worksheet data with images
-    initialWorksheetData.questions = updatedQuestions;
 
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
-    // Step 4: Apply modern template system if requested
-    let finalWorksheetData = initialWorksheetData;
-    if (body.useModernTemplates) {
-      console.log('[ENHANCED-WORKSHEET-API] Applying modern template system...');
-      try {
-        const structuredWorksheet = generateStructuredWorksheet(topic, subtopic, gradeLevel);
-        const integratedWorksheet = integrateWithVisualEditor({
-          ...structuredWorksheet,
-          content: initialWorksheetData,
-          questions: updatedQuestions,
-          images: visualElements
-        });
-        
-        finalWorksheetData = {
-          ...initialWorksheetData,
-          title: `${topic}: ${subtopic}`,
-          templateData: integratedWorksheet,
-          useModernStyling: true,
-          styling: {
-            theme: body.style === 'modern-blue' ? 'modern-blue' : 'professional',
-            layout: 'modern-education-template',
-            colorScheme: 'blue-header-gradient'
-          }
-        };
-        
-        console.log('[ENHANCED-WORKSHEET-API] Modern template applied successfully');
-      } catch (templateError) {
-        console.error('[ENHANCED-WORKSHEET-API] Template system error:', templateError);
-        // Continue with regular generation if template fails
-      }
-    }
+    // Step 3: Generate comprehensive worksheet content
+    const worksheetData = await generateEnhancedWorksheet(
+      body,
+      visualElements,
+      processedCurrentEvents,
+      activities
+    );
 
-    // Step 5: Create enhanced response with question-specific images
-    try {
-      // Ensure data is JSON-serializable before creating worksheet
-      const contentData = {
-        ...finalWorksheetData,
-        questions: updatedQuestions
-      };
-      
-      // Test JSON serialization to catch any circular references or issues
-      const testSerialization = JSON.stringify(contentData);
-      console.log('[ENHANCED-WORKSHEET-API] Content data serialization successful');
-      
-      const worksheet: WorksheetResponse = {
-        id: generateWorksheetId(),
-        title: finalWorksheetData.title,
-        content: testSerialization,
-        questions: finalWorksheetData.questions || [],
-        instructions: finalWorksheetData.instructions,
-        answerKey: finalWorksheetData.answerKey || [],
-        createdAt: new Date().toISOString(),
-        visualElements,
-        currentEvents: processedCurrentEvents.map(event => ({
-          id: `news_${Date.now()}`,
-          title: event.title,
-          summary: event.description,
-          relevance: `Connects to ${subtopic} concepts`,
-          discussionPoints: [`How does this relate to ${subtopic}?`],
-          ageAppropriate: true
-        })),
-        pedagogicalNotes: finalWorksheetData.pedagogicalNotes,
-        difficultyProgression: finalWorksheetData.difficultyProgression
-      };
+    // Step 4: Create enhanced response
+    const worksheet: WorksheetResponse = {
+      id: generateWorksheetId(),
+      title: worksheetData.title,
+      content: JSON.stringify(worksheetData),
+      questions: worksheetData.questions || [],
+      instructions: worksheetData.instructions,
+      answerKey: worksheetData.answerKey || [],
+      createdAt: new Date().toISOString(),
+      visualElements,
+      activities,
+      currentEvents: processedCurrentEvents.map(event => ({
+        id: `news_${Date.now()}`,
+        title: event.title,
+        summary: event.description,
+        relevance: `Connects to ${subtopic} concepts`,
+        discussionPoints: [`How does this relate to ${subtopic}?`],
+        ageAppropriate: true
+      })),
+      pedagogicalNotes: worksheetData.pedagogicalNotes,
+      difficultyProgression: worksheetData.difficultyProgression
+    };
 
-      console.log(`[ENHANCED-WORKSHEET-API] Successfully generated worksheet with ${visualElements.length} unique images (${visualElements.filter(v => v.relatedQuestionIds).length} question-specific)`);
-      return NextResponse.json(worksheet);
-      
-    } catch (jsonError) {
-      console.error('[ENHANCED-WORKSHEET-API] JSON serialization error:', jsonError);
-      console.error('[ENHANCED-WORKSHEET-API] Problematic data:', {
-        title: finalWorksheetData.title,
-        questionsCount: finalWorksheetData.questions?.length,
-        visualElementsCount: visualElements.length
-      });
-      
-      // Return a simplified response if JSON fails
-      return NextResponse.json({
-        error: 'JSON serialization failed',
-        details: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error'
-      }, { status: 500 });
-    }
+    console.log('[ENHANCED-WORKSHEET-API] Successfully generated enhanced worksheet');
+    return NextResponse.json(worksheet);
 
   } catch (error) {
     console.error('[ENHANCED-WORKSHEET-API] Error:', error);
-    
-    // Log more detailed error information
-    if (error instanceof Error) {
-      console.error('[ENHANCED-WORKSHEET-API] Error message:', error.message);
-      console.error('[ENHANCED-WORKSHEET-API] Error stack:', error.stack);
-    }
-    
     return NextResponse.json(
       { 
         error: 'Failed to generate enhanced worksheet',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

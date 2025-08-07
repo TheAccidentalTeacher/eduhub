@@ -4,11 +4,10 @@ export interface WorksheetRequest {
   subtopic: string;
   gradeLevel: string;
   learningObjective: string;
-  style: 'colorful' | 'minimal' | 'playful' | 'modern-blue' | 'professional';
+  style: 'colorful' | 'minimal' | 'playful';
   includeVisuals?: boolean;
   includeCurrentEvents?: boolean;
-  worksheetType?: 'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on' | 'modern-template';
-  useModernTemplates?: boolean;
+  worksheetType?: 'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on';
   // Step 3: Pedagogical Intelligence
   learningProfile?: LearningProfile;
   pedagogicalFramework?: Partial<PedagogicalFramework>;
@@ -25,6 +24,7 @@ export interface WorksheetResponse {
   answerKey?: WorksheetAnswer[];
   createdAt: string;
   visualElements?: VisualElement[];
+  activities?: InteractiveActivity[];
   currentEvents?: NewsReference[];
   pedagogicalNotes?: string;
   difficultyProgression?: 'easy-to-hard' | 'mixed' | 'scaffolded';
@@ -68,6 +68,16 @@ export interface VisualElement {
   source: string;
   placement: 'header' | 'inline' | 'sidebar' | 'background';
   relatedQuestionIds?: string[];
+}
+
+export interface InteractiveActivity {
+  id: string;
+  type: 'cut-and-paste' | 'coloring' | 'maze' | 'word-search' | 'crossword' | 'matching-game' | 'role-play' | 'experiment';
+  title: string;
+  instructions: string;
+  materials?: string[];
+  estimatedTime?: string;
+  visualAids?: VisualElement[];
 }
 
 export interface NewsReference {

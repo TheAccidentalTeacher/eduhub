@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
       answerKey: rawWorksheet.answerKey || [],
       createdAt: new Date().toISOString(),
       visualElements,
+      activities: rawWorksheet.activities || [],
       currentEvents: rawWorksheet.currentEvents || [],
       pedagogicalNotes: generatePedagogicalNotes(contentStrategy, pedagogicalFramework),
       difficultyProgression: contentStrategy.progressionType,
@@ -228,6 +229,14 @@ async function generatePedagogicalFramework(request: IntelligentWorksheetRequest
 function createIntelligentPrompts(request: IntelligentWorksheetRequest, strategy: any, framework: PedagogicalFramework) {
   const systemPrompt = `You are an expert educational content creator with deep knowledge of pedagogical best practices, learning science, and differentiated instruction.
 
+CRITICAL CONTENT SAFETY REQUIREMENTS:
+- ALL content must be age-appropriate and educationally sound
+- NO violence, weapons, inappropriate military imagery, or disturbing content
+- Focus on learning, understanding, and positive educational outcomes
+- For historical topics: emphasize learning, peace, cultural understanding, and historical significance
+- For sensitive subjects: use appropriate academic framing suitable for the grade level
+- Promote critical thinking, empathy, and global citizenship
+
 PEDAGOGICAL FRAMEWORK:
 - Bloom's Level: ${framework.bloomsLevel}
 - DOK Level: ${framework.dokLevel}
@@ -287,7 +296,8 @@ Return a JSON object with the following structure:
       "explanation": "why this is correct",
       "pedagogicalReasoning": "teaching strategy explanation"
     }
-  ]
+  ],
+  "activities": [] // interactive activities if requested
 }`;
 
   return { systemPrompt, userPrompt };
