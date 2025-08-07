@@ -14,6 +14,10 @@ export default function WorksheetGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWorksheet, setGeneratedWorksheet] = useState<WorksheetResponse | null>(null);
   const [isExporting, setIsExporting] = useState<'pdf' | 'docx' | null>(null);
+  const [includeVisuals, setIncludeVisuals] = useState(true);
+  const [includeCurrentEvents, setIncludeCurrentEvents] = useState(false);
+  const [worksheetType, setWorksheetType] = useState<'standard' | 'interactive' | 'story-based' | 'puzzle' | 'hands-on'>('standard');
+  const [useEnhancedGeneration, setUseEnhancedGeneration] = useState(true);
 
   const gradeOptions = [
     'Pre-K', 'Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade',
@@ -46,11 +50,15 @@ export default function WorksheetGenerator() {
         gradeLevel: selectedGrade,
         learningObjective,
         style: selectedStyle,
+        includeVisuals,
+        includeCurrentEvents,
+        worksheetType,
       };
 
       console.log('[WORKSHEET-GENERATOR] Request payload:', request);
 
-      const response = await fetch('/api/generate-worksheet', {
+      const apiEndpoint = useEnhancedGeneration ? '/api/generate-enhanced-worksheet' : '/api/generate-worksheet';
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -323,6 +331,77 @@ export default function WorksheetGenerator() {
             </div>
           </div>
           
+          {/* Enhanced Generation Toggle */}
+          <div className="mb-8">
+            <label className="flex items-center text-white text-lg font-semibold">
+              <input
+                type="checkbox"
+                checked={useEnhancedGeneration}
+                onChange={(e) => setUseEnhancedGeneration(e.target.checked)}
+                className="mr-3 w-5 h-5 rounded border-white/30 bg-white/20 text-blue-500 focus:ring-blue-500 focus:ring-2"
+              />
+              🚀 Use Enhanced AI Generation
+            </label>
+            <p className="text-white/70 text-sm mt-2 ml-8">
+              Includes images, interactive activities, and pedagogically optimized content
+            </p>
+          </div>
+
+          {/* Enhanced Options */}
+          {useEnhancedGeneration && (
+            <>
+              <div className="mb-8">
+                <label className="block text-white text-xl font-semibold mb-3">Worksheet Type</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { value: 'standard', label: '📄 Standard', desc: 'Traditional Q&A format' },
+                    { value: 'interactive', label: '🎮 Interactive', desc: 'Hands-on activities' },
+                    { value: 'story-based', label: '📚 Story-Based', desc: 'Narrative learning' },
+                    { value: 'puzzle', label: '🧩 Puzzle', desc: 'Games and challenges' },
+                    { value: 'hands-on', label: '🔬 Hands-On', desc: 'Experiments & crafts' }
+                  ].map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => setWorksheetType(type.value as any)}
+                      className={`p-3 rounded-xl text-sm font-medium transition-all hover:scale-105 ${
+                        worksheetType === type.value 
+                          ? 'bg-white text-purple-700 shadow-lg' 
+                          : 'bg-white/20 text-white border border-white/30'
+                      }`}
+                    >
+                      <div className="font-bold">{type.label}</div>
+                      <div className="text-xs opacity-80">{type.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <label className="block text-white text-xl font-semibold mb-3">Content Enhancement</label>
+                <div className="space-y-3">
+                  <label className="flex items-center text-white">
+                    <input
+                      type="checkbox"
+                      checked={includeVisuals}
+                      onChange={(e) => setIncludeVisuals(e.target.checked)}
+                      className="mr-3 w-4 h-4 rounded border-white/30 bg-white/20 text-blue-500"
+                    />
+                    📸 Include Images & Visual Elements
+                  </label>
+                  <label className="flex items-center text-white">
+                    <input
+                      type="checkbox"
+                      checked={includeCurrentEvents}
+                      onChange={(e) => setIncludeCurrentEvents(e.target.checked)}
+                      className="mr-3 w-4 h-4 rounded border-white/30 bg-white/20 text-blue-500"
+                    />
+                    📰 Connect to Current Events
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
+          
           {/* Generate Button */}
           <button
             onClick={handleGenerateWorksheet}
@@ -331,11 +410,13 @@ export default function WorksheetGenerator() {
           >
             {isGenerating ? (
               <>
-                <span className="animate-spin mr-2">⏳</span> Generating...
+                <span className="animate-spin mr-2">⏳</span> 
+                {useEnhancedGeneration ? 'Creating Enhanced Worksheet...' : 'Generating...'}
               </>
             ) : (
               <>
-                <span className="mr-2">✨</span> Generate with AI
+                <span className="mr-2">{useEnhancedGeneration ? '🚀' : '✨'}</span> 
+                {useEnhancedGeneration ? 'Generate Enhanced Worksheet' : 'Generate with AI'}
               </>
             )}
           </button>
