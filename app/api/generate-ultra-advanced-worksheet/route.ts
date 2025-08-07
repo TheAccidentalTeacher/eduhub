@@ -46,18 +46,22 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Generate ultra-detailed prompts for each visual element
     console.log('[ULTRA-ADVANCED-API] 🎨 Creating detailed image generation prompts...');
-    const visualPromises = educationalStrategy.visualRequirements?.map(async (visualReq) => {
+    const visualPromises = educationalStrategy.visualRequirements?.map(async (visualReq, index) => {
       try {
+        // Add unique context for each visual to prevent duplicates
+        const contextualInfo = `${topic}: ${subtopic} for ${gradeLevel} students - Visual ${index + 1} of ${educationalStrategy.visualRequirements?.length} - Type: ${visualReq.type} at ${visualReq.placement}`;
+        
         const detailedPrompt = await generateDetailedImagePrompt(
           visualReq,
-          `${topic}: ${subtopic} for ${gradeLevel} students`,
+          contextualInfo,
           gradeLevel,
           topic
         );
         
-        console.log(`[ULTRA-ADVANCED-API] 🖼️ Generated ${visualReq.type} prompt: ${detailedPrompt.substring(0, 100)}...`);
+        console.log(`[ULTRA-ADVANCED-API] 🖼️ Generated ${visualReq.type} prompt ${index + 1}: ${detailedPrompt.substring(0, 100)}...`);
         
-        return await generateIntelligentImage(topic, subtopic, gradeLevel, detailedPrompt);
+        // Pass contextual information to ensure unique generation
+        return await generateIntelligentImage(topic, subtopic, gradeLevel, `${detailedPrompt} [Position: ${visualReq.placement}, Index: ${index}]`);
       } catch (error) {
         console.error(`[ULTRA-ADVANCED-API] Visual generation failed for ${visualReq.type}:`, error);
         return null;

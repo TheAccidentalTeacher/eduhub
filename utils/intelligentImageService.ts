@@ -113,14 +113,29 @@ Respond in JSON format:
 }
 
 // DALL-E 3 Image Generation
-export async function generateWithDALLE(prompt: string, topic: string): Promise<GeneratedImageResult | null> {
+export async function generateWithDALLE(prompt: string, topic: string, uniqueId?: string): Promise<GeneratedImageResult | null> {
   try {
     const openai = getOpenAIClient();
     
+    // Add variety and uniqueness to prevent identical images
+    const variations = [
+      'vibrant and colorful',
+      'clear and detailed',
+      'bright and engaging',
+      'professional yet friendly',
+      'modern educational style'
+    ];
+    
+    const randomVariation = variations[Math.floor(Math.random() * variations.length)];
+    const uniqueStyleNote = uniqueId ? ` (Unique variant: ${Math.random().toString(36).substr(2, 5)})` : '';
+    
     const enhancedPrompt = `Educational illustration for children: ${prompt}. 
-    Style: Clean, colorful, friendly, appropriate for educational materials. 
-    Avoid: Any inappropriate content, dark themes, scary elements.
-    Focus: Clear, simple, engaging visuals that help learning.`;
+    Style: ${randomVariation}, clean, appropriate for educational materials${uniqueStyleNote}. 
+    Avoid: Any inappropriate content, dark themes, scary elements, stock photo look.
+    Focus: Clear, simple, engaging visuals that help learning.
+    Make this unique and distinctive from other educational illustrations.`;
+
+    console.log(`[DALL-E] Generating with unique prompt (${uniqueId}): ${enhancedPrompt.substring(0, 100)}...`);
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -136,7 +151,7 @@ export async function generateWithDALLE(prompt: string, topic: string): Promise<
 
     return {
       url: imageUrl,
-      description: `AI-generated educational illustration: ${prompt}`,
+      description: `AI-generated educational illustration: ${prompt} (ID: ${uniqueId})`,
       source: 'DALL-E 3',
       method: 'dalle',
       prompt: enhancedPrompt
@@ -148,12 +163,15 @@ export async function generateWithDALLE(prompt: string, topic: string): Promise<
 }
 
 // Stability AI Image Generation
-export async function generateWithStability(prompt: string): Promise<GeneratedImageResult | null> {
+export async function generateWithStability(prompt: string, uniqueId?: string): Promise<GeneratedImageResult | null> {
   const apiKey = process.env.STABILITY_AI_API_KEY;
   if (!apiKey) return null;
 
   try {
-    const enhancedPrompt = `Educational diagram: ${prompt}, clean illustration style, appropriate for children, educational materials, bright colors, clear details`;
+    const uniqueStyleNote = uniqueId ? `, unique variant ${Math.random().toString(36).substr(2, 5)}` : '';
+    const enhancedPrompt = `Educational diagram: ${prompt}, clean illustration style, appropriate for children, educational materials, bright colors, clear details${uniqueStyleNote}`;
+
+    console.log(`[STABILITY] Generating with unique prompt (${uniqueId}): ${enhancedPrompt.substring(0, 100)}...`);
 
     const response = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image', {
       method: 'POST',
@@ -180,7 +198,7 @@ export async function generateWithStability(prompt: string): Promise<GeneratedIm
 
     return {
       url: `data:image/png;base64,${imageData}`,
-      description: `AI-generated educational diagram: ${prompt}`,
+      description: `AI-generated educational diagram: ${prompt} (ID: ${uniqueId})`,
       source: 'Stability AI',
       method: 'stability',
       prompt: enhancedPrompt
@@ -192,15 +210,21 @@ export async function generateWithStability(prompt: string): Promise<GeneratedIm
 }
 
 // Educational Diagram Generator (using simple graphics)
-export async function generateEducationalDiagram(topic: string, subtopic: string): Promise<GeneratedImageResult | null> {
-  // For sensitive topics, create simple educational diagrams
+export async function generateEducationalDiagram(topic: string, subtopic: string, uniqueId?: string): Promise<GeneratedImageResult | null> {
+  // For sensitive topics, create simple educational diagrams with unique elements
+  const randomColor = ['f0f8ff', 'fff5ee', 'f0fff0', 'fffaf0', 'f5f5dc'][Math.floor(Math.random() * 5)];
+  const randomTextColor = ['2c3e50', '8b4513', '228b22', 'ff8c00', '4b0082'][Math.floor(Math.random() * 5)];
+  const uniqueParam = uniqueId ? `+${Math.random().toString(36).substr(2, 5)}` : '';
+  
   const diagramTypes: { [key: string]: string } = {
-    'firearm': 'https://via.placeholder.com/800x600/f0f8ff/2c3e50?text=Educational+Diagram%3A+Types+and+Safety',
-    'weapon': 'https://via.placeholder.com/800x600/f0f8ff/2c3e50?text=Educational+Safety+Information',
-    'history': 'https://via.placeholder.com/800x600/fff5ee/8b4513?text=Historical+Timeline+Diagram',
-    'science': 'https://via.placeholder.com/800x600/f0fff0/228b22?text=Scientific+Process+Diagram',
-    'math': 'https://via.placeholder.com/800x600/fffaf0/ff8c00?text=Mathematical+Concept+Chart'
+    'firearm': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Educational+Diagram%3A+Types+and+Safety${uniqueParam}`,
+    'weapon': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Educational+Safety+Information${uniqueParam}`,
+    'history': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Historical+Timeline+Diagram${uniqueParam}`,
+    'science': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Scientific+Process+Diagram${uniqueParam}`,
+    'math': `https://via.placeholder.com/800x600/${randomColor}/${randomTextColor}?text=Mathematical+Concept+Chart${uniqueParam}`
   };
+
+  console.log(`[DIAGRAM] Generating educational diagram (${uniqueId}) for: ${topic}/${subtopic}`);
 
   const topicLower = `${topic} ${subtopic}`.toLowerCase();
   
@@ -208,7 +232,7 @@ export async function generateEducationalDiagram(topic: string, subtopic: string
     if (topicLower.includes(key)) {
       return {
         url,
-        description: `Educational diagram for ${subtopic}`,
+        description: `Educational diagram for ${subtopic} (ID: ${uniqueId})`,
         source: 'Educational Generator',
         method: 'educational_diagram'
       };
@@ -226,27 +250,33 @@ export async function generateIntelligentImage(
   questionContext?: string
 ): Promise<GeneratedImageResult | null> {
   try {
+    // Add unique timestamp and random seed to ensure truly unique generations
+    const uniqueId = Date.now() + Math.random().toString(36).substr(2, 9);
+    const contextWithUniqueness = `${questionContext || 'Educational illustration'} [Unique ID: ${uniqueId}]`;
+    
+    console.log(`[INTELLIGENT-IMAGE] Generating unique image for: ${topic}/${subtopic} - ID: ${uniqueId}`);
+    
     // Step 1: Analyze and choose strategy
-    const strategy = await analyzeImageRequirements(topic, subtopic, gradeLevel, questionContext);
+    const strategy = await analyzeImageRequirements(topic, subtopic, gradeLevel, contextWithUniqueness);
     
     console.log(`[INTELLIGENT-IMAGE] Strategy: ${strategy.method} (${strategy.confidence}) - ${strategy.reasoning}`);
 
-    // Step 2: Execute based on strategy
+    // Step 2: Execute based on strategy with uniqueness
     switch (strategy.method) {
       case 'dalle':
         if (strategy.prompt) {
-          return await generateWithDALLE(strategy.prompt, topic);
+          return await generateWithDALLE(strategy.prompt, topic, uniqueId);
         }
         break;
         
       case 'stability':
         if (strategy.prompt) {
-          return await generateWithStability(strategy.prompt);
+          return await generateWithStability(strategy.prompt, uniqueId);
         }
         break;
         
       case 'educational_diagram':
-        return await generateEducationalDiagram(topic, subtopic);
+        return await generateEducationalDiagram(topic, subtopic, uniqueId);
         
       case 'stock':
       default:

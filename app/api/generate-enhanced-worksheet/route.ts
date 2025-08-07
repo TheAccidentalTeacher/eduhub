@@ -211,18 +211,20 @@ export async function POST(request: NextRequest) {
 
     console.log('[ENHANCED-WORKSHEET-API] Gathering visual and content resources...');
 
-    // Step 1: Generate intelligent primary image
-    const intelligentImage = await generateIntelligentImage(topic, subtopic, gradeLevel, learningObjective);
+    // Step 1: Generate diverse images to prevent repetition
+    const primaryImagePromise = generateIntelligentImage(topic, subtopic, gradeLevel, `primary image for ${learningObjective}`);
 
-    // Step 2: Gather additional visual and multimedia content in parallel
+    // Step 2: Gather additional visual and multimedia content in parallel  
     const [
+      primaryImageResult,
       topicImages,
       currentEvents,
       educationalGifs,
       educationalVideos,
       customIllustration
     ] = await Promise.allSettled([
-      searchAllImages(`${subtopic} education children ${gradeLevel}`, 3), // Reduced since we have intelligent image
+      primaryImagePromise,
+      searchAllImages(`${subtopic} education children ${gradeLevel}`, 3), // Using our new diverse search
       searchRelevantNews(topic, 2),
       searchEducationalGifs(subtopic, 2),
       searchEducationalVideos(subtopic, gradeLevel, 2),
@@ -234,16 +236,17 @@ export async function POST(request: NextRequest) {
     let processedCurrentEvents: any[] = [];
 
     // Priority 1: Add intelligent AI-generated image first (header position)
-    if (intelligentImage) {
+    const primaryImage = primaryImageResult.status === 'fulfilled' ? primaryImageResult.value : null;
+    if (primaryImage) {
       visualElements.push({
         id: 'intelligent_primary',
-        type: intelligentImage.method === 'educational_diagram' ? 'diagram' : 'illustration',
-        url: intelligentImage.url,
-        description: intelligentImage.description,
-        source: intelligentImage.source,
+        type: primaryImage.method === 'educational_diagram' ? 'diagram' : 'illustration',
+        url: primaryImage.url,
+        description: primaryImage.description,
+        source: primaryImage.source,
         placement: 'header'
       });
-      console.log(`[ENHANCED-WORKSHEET-API] Added intelligent image via ${intelligentImage.method}`);
+      console.log(`[ENHANCED-WORKSHEET-API] Added primary image via ${primaryImage.method}`);
     }
 
     // Priority 2: Add stock images (inline placement only, since header is taken)
@@ -275,14 +278,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Add custom illustration
-    if (customIllustration.status === 'fulfilled' && customIllustration.value) {
+    if (customIllustration?.status === 'fulfilled' && customIllustration.value) {
       visualElements.push({
         id: 'custom_illustration',
         type: 'illustration',
         url: customIllustration.value.url,
         description: customIllustration.value.prompt,
         source: 'stability-ai',
-        placement: 'header'
+        placement: 'inline' // Changed from header to avoid conflicts
       });
     }
 

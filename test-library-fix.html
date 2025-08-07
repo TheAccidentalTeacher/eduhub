@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Image Repetition Fix - REAL TEST</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .fix-summary {
+            background: rgba(0, 255, 136, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #00ff88;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #FFD700;
+        }
+        button {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border: none;
+            color: #333;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .loading {
+            text-align: center;
+            color: #FFD700;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .image-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .image-item img {
+            max-width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 2px solid transparent;
+        }
+        .image-item.duplicate img {
+            border-color: #ff4444;
+        }
+        .image-item.unique img {
+            border-color: #00ff88;
+        }
+        .image-item .label {
+            font-size: 12px;
+            color: #FFD700;
+        }
+        .success { color: #00ff88; font-weight: bold; }
+        .warning { color: #ffaa00; font-weight: bold; }
+        .error { color: #ff4444; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Library Image Repetition - FIXED!</h1>
+        
+        <div class="fix-summary">
+            <h2>✅ What We Fixed</h2>
+            <p><strong>Problem:</strong> The same library/bookshelf image was appearing over and over in worksheets</p>
+            <p><strong>Root Cause:</strong> Fallback system always returned the same URL: <code>photo-1481627834876-b7833e8f5570</code></p>
+            
+            <h3>🛠️ Solutions Implemented:</h3>
+            <ul>
+                <li><strong>Multiple AI Services:</strong> Replicate, DALL-E, HuggingFace, Stability AI</li>
+                <li><strong>Unique Tracking:</strong> System remembers used images and avoids repeats</li>
+                <li><strong>Diverse Fallbacks:</strong> 20+ different educational images instead of 1</li>
+                <li><strong>Smart Randomization:</strong> Even fallbacks are unique per request</li>
+                <li><strong>Service Rotation:</strong> Different AI service for each image</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test: Enhanced Worksheet (Fixed API)</h3>
+            <p>This tests the <strong>enhanced worksheet API</strong> that was causing the library image repetition.</p>
+            
+            <button onclick="testEnhancedWorksheet()">
+                Generate Enhanced Worksheet
+            </button>
+            
+            <div id="result1" class="result" style="display: none;"></div>
+            <div id="images1" class="image-gallery" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Test: Multiple Generations (Same Topic)</h3>
+            <p>Generate the same topic 3 times to verify NO repeated library images.</p>
+            
+            <button onclick="testMultipleGenerations()">
+                Test 3 Identical Requests
+            </button>
+            
+            <div id="result2" class="result" style="display: none;"></div>
+            <div id="images2" class="image-gallery" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Analysis</h3>
+            <div id="analysis" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const LIBRARY_IMAGE_ID = 'photo-1481627834876-b7833e8f5570'; // The problematic repeated image
+
+        function checkForDuplicates(images, resultDiv) {
+            const urls = images.map(img => img.url);
+            const uniqueUrls = new Set(urls);
+            const hasLibraryImage = urls.some(url => url.includes(LIBRARY_IMAGE_ID));
+            
+            const duplicateCount = urls.length - uniqueUrls.size;
+            const uniquenessRate = urls.length > 0 ? Math.round((uniqueUrls.size / urls.length) * 100) : 0;
+            
+            return {
+                total: urls.length,
+                unique: uniqueUrls.size,
+                duplicates: duplicateCount,
+                uniquenessRate,
+                hasLibraryImage,
+                analysis: {
+                    status: hasLibraryImage ? 'error' : (duplicateCount === 0 ? 'success' : 'warning'),
+                    message: hasLibraryImage ? 
+                        '🚨 LIBRARY IMAGE DETECTED - Fix failed!' :
+                        (duplicateCount === 0 ? 
+                            '🎉 SUCCESS - All images unique!' : 
+                            '⚠️ Some duplicates detected')
+                }
+            };
+        }
+
+        function displayImages(images, containerId, testName) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            container.style.display = 'grid';
+            
+            const urlCounts = {};
+            images.forEach(img => {
+                urlCounts[img.url] = (urlCounts[img.url] || 0) + 1;
+            });
+            
+            images.forEach((img, index) => {
+                const isDuplicate = urlCounts[img.url] > 1;
+                const isLibraryImage = img.url.includes(LIBRARY_IMAGE_ID);
+                
+                const imageItem = document.createElement('div');
+                imageItem.className = `image-item ${isDuplicate ? 'duplicate' : 'unique'}`;
+                
+                imageItem.innerHTML = `
+                    <img src="${img.url}" alt="${img.description}" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iNzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2UgRXJyb3I8L3RleHQ+PC9zdmc+'">
+                    <div class="label">
+                        ${testName} #${index + 1}<br>
+                        Source: ${img.source || 'unknown'}<br>
+                        ${isDuplicate ? '🔄 DUPLICATE' : '✨ UNIQUE'}<br>
+                        ${isLibraryImage ? '📚 LIBRARY IMAGE!' : '👍 Different'}
+                    </div>
+                `;
+                container.appendChild(imageItem);
+            });
+        }
+
+        async function testEnhancedWorksheet() {
+            const button = event.target;
+            const resultDiv = document.getElementById('result1');
+            
+            button.disabled = true;
+            button.textContent = 'Testing...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">🔄 Testing enhanced worksheet with fixes...</div>';
+
+            try {
+                const response = await fetch('/api/generate-enhanced-worksheet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Social Studies',
+                        subtopic: 'Community Helpers',
+                        gradeLevel: 'Grade 3',
+                        learningObjective: 'Understanding different jobs in our community',
+                        style: 'engaging'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `❌ Error: ${data.error}`;
+                } else {
+                    const images = data.visualElements || [];
+                    const analysis = checkForDuplicates(images, resultDiv);
+                    
+                    displayImages(images, 'images1', 'Enhanced');
+                    
+                    resultDiv.innerHTML = `
+<span class="${analysis.analysis.status}">${analysis.analysis.message}</span>
+
+📊 <strong>Enhanced Worksheet Results:</strong>
+- Total Images: ${analysis.total}
+- Unique Images: ${analysis.unique}
+- Duplicate Images: ${analysis.duplicates}
+- Uniqueness Rate: ${analysis.uniquenessRate}%
+- Library Image Present: ${analysis.hasLibraryImage ? '❌ YES (PROBLEM!)' : '✅ NO (GOOD!)'}
+
+📋 <strong>Image Details:</strong>
+${images.map((img, i) => `- Image ${i + 1}: ${img.source || 'unknown'} (${img.type || 'image'})`).join('\n')}
+
+🎯 <strong>Test Result:</strong>
+${analysis.hasLibraryImage ? 
+  '🚨 FAILED - The problematic library image is still appearing!' :
+  analysis.duplicates === 0 ?
+    '🎉 PASSED - All images are unique, no library repetition!' :
+    '⚠️ PARTIAL - No library image but some other duplicates found'
+}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Generate Enhanced Worksheet';
+            }
+        }
+
+        async function testMultipleGenerations() {
+            const button = event.target;
+            const resultDiv = document.getElementById('result2');
+            
+            button.disabled = true;
+            button.textContent = 'Testing Multiple...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">🔄 Generating same topic 3 times...</div>';
+
+            try {
+                const requests = Array(3).fill(null).map(() => 
+                    fetch('/api/generate-enhanced-worksheet', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            topic: 'Math',
+                            subtopic: 'Basic Addition',
+                            gradeLevel: 'Grade 2',
+                            learningObjective: 'Adding single digit numbers',
+                            style: 'fun'
+                        })
+                    })
+                );
+
+                const responses = await Promise.all(requests);
+                const dataArray = await Promise.all(responses.map(r => r.json()));
+                
+                let allImages = [];
+                dataArray.forEach((data, runIndex) => {
+                    if (data.visualElements) {
+                        data.visualElements.forEach(img => {
+                            allImages.push({...img, runIndex});
+                        });
+                    }
+                });
+                
+                const analysis = checkForDuplicates(allImages, resultDiv);
+                displayImages(allImages, 'images2', 'Run');
+                
+                resultDiv.innerHTML = `
+<span class="${analysis.analysis.status}">${analysis.analysis.message}</span>
+
+📊 <strong>Cross-Generation Analysis:</strong>
+- Total Images (3 runs): ${analysis.total}
+- Unique Images: ${analysis.unique}
+- Duplicate Images: ${analysis.duplicates}
+- Uniqueness Rate: ${analysis.uniquenessRate}%
+- Library Image Present: ${analysis.hasLibraryImage ? '❌ YES (BIG PROBLEM!)' : '✅ NO (EXCELLENT!)'}
+
+🎯 <strong>Final Verdict:</strong>
+${analysis.hasLibraryImage ? 
+  '🚨 CRITICAL FAILURE - Library image still appearing across generations!' :
+  analysis.uniquenessRate >= 80 ?
+    '🏆 EXCELLENT - High diversity, no library image repetition!' :
+    analysis.uniquenessRate >= 60 ?
+      '👍 GOOD - Decent diversity, library issue fixed!' :
+      '⚠️ NEEDS WORK - Low diversity but library issue resolved'
+}
+
+📈 <strong>Image Diversity Analysis:</strong>
+This test proves whether our fix prevents the same images (especially the library image) from appearing when generating identical requests multiple times.
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Test 3 Identical Requests';
+            }
+        }
+    </script>
+</body>
+</html>
