@@ -125,7 +125,7 @@ Format as structured JSON with:
       "id": "unique_id",
       "type": "question_type",
       "question": "Well-crafted question",
-      "options": ["array if multiple choice"],
+      "options": ["option1", "option2", "option3", "option4"],
       "points": number,
       "bloomsLevel": "cognitive_level",
       "visualAidId": "id_if_applicable",
@@ -143,6 +143,10 @@ Format as structured JSON with:
   "pedagogicalNotes": "Teaching strategies and tips",
   "difficultyProgression": "how_questions_build_complexity"
 }
+
+IMPORTANT: For multiple choice questions, "options" must be an array of strings, NOT an object. Example:
+✅ CORRECT: "options": ["First option", "Second option", "Third option", "Fourth option"]
+❌ WRONG: "options": {"First option": "value", "Second option": "value"}
 
 Make this worksheet truly engaging and educational for ${request.gradeLevel} students!
 `;
@@ -166,7 +170,20 @@ Make this worksheet truly engaging and educational for ${request.gradeLevel} stu
   const response = completion.choices[0]?.message?.content;
   if (!response) throw new Error('No response from OpenAI');
 
-  return JSON.parse(response);
+  const parsedData = JSON.parse(response);
+  
+  // Fix any malformed options (objects instead of arrays)
+  if (parsedData.questions) {
+    parsedData.questions = parsedData.questions.map((question: any) => {
+      if (question.options && typeof question.options === 'object' && !Array.isArray(question.options)) {
+        // Convert object to array by taking the keys
+        question.options = Object.keys(question.options);
+      }
+      return question;
+    });
+  }
+  
+  return parsedData;
 }
 
 // Main API endpoint

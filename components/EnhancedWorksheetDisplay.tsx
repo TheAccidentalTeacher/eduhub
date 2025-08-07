@@ -77,14 +77,25 @@ export default function EnhancedWorksheetDisplay({
         <div className="ml-2">
           {question.type === 'multiple-choice' && question.options && (
             <div className="space-y-3">
-              {question.options.map((option: string, optIndex: number) => (
-                <div key={optIndex} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-                  <div className="w-6 h-6 border-2 border-blue-400 rounded-full mr-4 flex items-center justify-center font-bold text-blue-600">
-                    {String.fromCharCode(65 + optIndex)}
+              {(() => {
+                // Handle both array and object formats for options
+                let optionsArray: string[] = [];
+                if (Array.isArray(question.options)) {
+                  optionsArray = question.options;
+                } else if (typeof question.options === 'object') {
+                  // If options is an object, convert keys to array
+                  optionsArray = Object.keys(question.options);
+                }
+                
+                return optionsArray.map((option: string, optIndex: number) => (
+                  <div key={optIndex} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
+                    <div className="w-6 h-6 border-2 border-blue-400 rounded-full mr-4 flex items-center justify-center font-bold text-blue-600">
+                      {String.fromCharCode(65 + optIndex)}
+                    </div>
+                    <span className="text-gray-700">{option}</span>
                   </div>
-                  <span className="text-gray-700">{option}</span>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           )}
 
