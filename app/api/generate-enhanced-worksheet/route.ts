@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { WorksheetRequest, WorksheetResponse, VisualElement, InteractiveActivity } from '@/types/worksheet';
+import { WorksheetRequest, WorksheetResponse, InteractiveActivity } from '@/types/worksheet';
 import { 
   searchAllImages, 
   searchRelevantNews, 
@@ -61,7 +61,6 @@ function getPedagogicalPrompt(gradeLevel: string, topic: string, subtopic: strin
 // Generate comprehensive worksheet content
 async function generateEnhancedWorksheet(
   request: WorksheetRequest,
-  visualElements: VisualElement[],
   currentEvents: any[]
 ): Promise<any> {
   const openai = getOpenAIClient();
@@ -88,20 +87,16 @@ CONTENT GUIDELINES:
 - Educational focus with clear learning objectives
 - Professional classroom-appropriate presentation
 
-AVAILABLE VISUAL ELEMENTS:
-${visualElements.map(v => `- ${v.description} (${v.type})`).join('\n')}
-
 CURRENT EVENTS AVAILABLE:
 ${currentEvents.map(e => `- ${e.title}: ${e.description}`).join('\n')}
 
 CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
 
-1. ENGAGING TITLE with visual appeal
-2. CLEAR INSTRUCTIONS that reference visual elements
+1. ENGAGING TITLE 
+2. CLEAR INSTRUCTIONS
 3. 8-12 VARIED QUESTIONS with:
    - Different cognitive levels (Bloom's Taxonomy)
    - Multiple question types
-   - Integration with visual elements
    - Progressive difficulty
    - Real-world connections
 
@@ -132,12 +127,11 @@ Format as structured JSON with:
   "questions": [
     {
       "id": "unique_id",
-      "type": "question_type",
+      "type": "question_type", 
       "question": "Well-crafted question",
       "options": ["array if multiple choice"],
       "points": number,
       "bloomsLevel": "cognitive_level",
-      "visualAidId": "id_if_applicable",
       "hint": "helpful_hint_if_needed"
     }
   ],
@@ -204,80 +198,26 @@ export async function POST(request: NextRequest) {
 
     console.log('[ENHANCED-WORKSHEET-API] Gathering visual and content resources...');
 
-    // Step 1: Gather visual and multimedia content in parallel
-    const [
-      topicImages,
-      currentEvents,
-      educationalGifs,
-      educationalVideos,
-      customIllustration
-    ] = await Promise.allSettled([
-      searchAllImages(`${subtopic} education children ${gradeLevel}`, 4),
-      searchRelevantNews(topic, 2),
-      searchEducationalGifs(subtopic, 2),
-      searchEducationalVideos(subtopic, gradeLevel, 2),
-      generateCustomImage(`${subtopic} educational illustration`, gradeLevel)
+    // Step 1: Gather current events only
+    const [currentEvents] = await Promise.allSettled([
+      searchRelevantNews(topic, 2)
     ]);
 
-    // Process results and handle any failures gracefully
-    const visualElements: VisualElement[] = [];
-    let processedCurrentEvents: any[] = [];
-
-    // Add images
-    if (topicImages.status === 'fulfilled' && topicImages.value.length > 0) {
-      topicImages.value.forEach((img, index) => {
-        visualElements.push({
-          id: `img_${index}`,
-          type: 'image',
-          url: img.url,
-          description: img.description,
-          source: img.source,
-          placement: index === 0 ? 'header' : 'inline'
-        });
-      });
-    }
-
-    // Add GIFs
-    if (educationalGifs.status === 'fulfilled' && educationalGifs.value.length > 0) {
-      educationalGifs.value.forEach((gif, index) => {
-        visualElements.push({
-          id: `gif_${index}`,
-          type: 'gif',
-          url: gif.url,
-          description: gif.title,
-          source: 'giphy',
-          placement: 'inline'
-        });
-      });
-    }
-
-    // Add custom illustration
-    if (customIllustration.status === 'fulfilled' && customIllustration.value) {
-      visualElements.push({
-        id: 'custom_illustration',
-        type: 'illustration',
-        url: customIllustration.value.url,
-        description: customIllustration.value.prompt,
-        source: 'stability-ai',
-        placement: 'header'
-      });
-    }
-
     // Process current events
+    let processedCurrentEvents: any[] = [];
     if (currentEvents.status === 'fulfilled') {
       processedCurrentEvents = currentEvents.value;
     }
 
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
-    // Step 3: Generate comprehensive worksheet content
+    // Step 2: Generate comprehensive worksheet content
     const worksheetData = await generateEnhancedWorksheet(
       body,
-      visualElements,
       processedCurrentEvents
     );
 
-    // Step 4: Create enhanced response
+    // Step 3: Create enhanced response
     const worksheet: WorksheetResponse = {
       id: generateWorksheetId(),
       title: worksheetData.title,
@@ -286,7 +226,7 @@ export async function POST(request: NextRequest) {
       instructions: worksheetData.instructions,
       answerKey: worksheetData.answerKey || [],
       createdAt: new Date().toISOString(),
-      visualElements,
+      visualElements: [], // Empty array to maintain type compatibility
       activities: worksheetData.activities || [], // Use AI-generated activities
       currentEvents: processedCurrentEvents.map(event => ({
         id: `news_${Date.now()}`,

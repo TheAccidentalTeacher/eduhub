@@ -28,11 +28,6 @@ export default function EnhancedWorksheetDisplay({
 
   // Render different question types with TRADITIONAL WORKSHEET styling
   const renderQuestion = (question: any, index: number) => {
-    const relatedVisual = worksheet.visualElements?.find(v => 
-      v.relatedQuestionIds?.includes(question.id) || 
-      (v.placement === 'inline' && Math.random() > 0.7)
-    );
-
     return (
       <div key={question.id} className="question-item mb-6">
         {/* Traditional Question Layout */}
@@ -44,13 +39,6 @@ export default function EnhancedWorksheetDisplay({
             <p className="text-black font-medium text-lg leading-relaxed mb-3">
               {question.question}
             </p>
-            
-            {/* Visual Aid - Traditional placement */}
-            {relatedVisual && (
-              <div className="my-4 text-center">
-                {renderVisualElement(relatedVisual, 'medium')}
-              </div>
-            )}
 
             {/* Question Content - Traditional Worksheet Style */}
             {question.type === 'multiple-choice' && question.options && (
