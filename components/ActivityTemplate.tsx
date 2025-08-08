@@ -239,27 +239,27 @@ export default function ActivityTemplate({ activity }: ActivityTemplateProps) {
           </div>
         );
 
-      case 'experiment':
+      case 'research':
         return (
           <div className="space-y-6">
-            <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
-              <h4 className="font-bold text-yellow-800 mb-4 flex items-center">
-                <span className="text-2xl mr-2">🧪</span>
-                Science Experiment
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <h4 className="font-bold text-blue-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">📚</span>
+                Research Project
               </h4>
               
               <div className="space-y-4">
                 <div className="bg-white p-4 rounded-lg">
-                  <h5 className="font-semibold text-gray-700 mb-2">📋 Hypothesis:</h5>
+                  <h5 className="font-semibold text-gray-700 mb-2">🎯 Research Question:</h5>
                   <div className="border-b-2 border-gray-300 w-full h-8"></div>
                 </div>
                 
                 <div className="bg-white p-4 rounded-lg">
-                  <h5 className="font-semibold text-gray-700 mb-2">🔬 Observations:</h5>
+                  <h5 className="font-semibold text-gray-700 mb-2">� Sources to Explore:</h5>
                   <div className="space-y-2">
-                    {[1, 2, 3].map((step) => (
-                      <div key={step} className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-600">Step {step}:</span>
+                    {[1, 2, 3].map((source) => (
+                      <div key={source} className="flex items-center space-x-2">
+                        <span className="font-medium text-gray-600">Source {source}:</span>
                         <div className="border-b-2 border-gray-300 flex-1 h-6"></div>
                       </div>
                     ))}
@@ -267,8 +267,88 @@ export default function ActivityTemplate({ activity }: ActivityTemplateProps) {
                 </div>
                 
                 <div className="bg-white p-4 rounded-lg">
-                  <h5 className="font-semibold text-gray-700 mb-2">📊 Results:</h5>
-                  <div className="border-b-2 border-gray-300 w-full h-8"></div>
+                  <h5 className="font-semibold text-gray-700 mb-2">📝 Key Findings:</h5>
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((finding) => (
+                      <div key={finding} className="border-b border-gray-300 h-6"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'discussion':
+        return (
+          <div className="space-y-6">
+            <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+              <h4 className="font-bold text-green-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">💬</span>
+                Discussion Activity
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-lg">
+                  <h5 className="font-semibold text-gray-700 mb-2">🤔 Discussion Questions:</h5>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((q) => (
+                      <div key={q} className="flex items-start space-x-2">
+                        <span className="font-medium text-gray-600 mt-1">{q}.</span>
+                        <div className="border-b border-gray-300 flex-1 h-6"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg">
+                  <h5 className="font-semibold text-gray-700 mb-2">� Your Thoughts:</h5>
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4].map((line) => (
+                      <div key={line} className="border-b border-gray-300 h-6"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'presentation':
+        return (
+          <div className="space-y-6">
+            <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+              <h4 className="font-bold text-purple-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">🎤</span>
+                Presentation Activity
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-lg">
+                  <h5 className="font-semibold text-gray-700 mb-2">📋 Presentation Plan:</h5>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium text-gray-600">Topic:</span>
+                      <div className="border-b border-gray-300 mt-1 h-6"></div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Main Points:</span>
+                      <div className="space-y-1 mt-1">
+                        {[1, 2, 3].map((point) => (
+                          <div key={point} className="border-b border-gray-300 h-6"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg">
+                  <h5 className="font-semibold text-gray-700 mb-2">🎯 Visual Aids Needed:</h5>
+                  <div className="space-y-2">
+                    {[1, 2].map((aid) => (
+                      <div key={aid} className="border-b border-gray-300 h-6"></div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -331,19 +411,6 @@ export default function ActivityTemplate({ activity }: ActivityTemplateProps) {
       <div className="activity-content">
         {renderActivityContent()}
       </div>
-
-      {/* Safety Note for Experiments */}
-      {activity.type === 'experiment' && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center">
-            <span className="text-red-600 text-xl mr-2">⚠️</span>
-            <span className="font-semibold text-red-800">Safety First!</span>
-          </div>
-          <p className="text-red-700 text-sm mt-1">
-            Always have an adult supervise this experiment and follow all safety guidelines.
-          </p>
-        </div>
-      )}
     </div>
   );
 }
