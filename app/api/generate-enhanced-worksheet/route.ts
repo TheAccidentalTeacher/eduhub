@@ -62,8 +62,7 @@ function getPedagogicalPrompt(gradeLevel: string, topic: string, subtopic: strin
 async function generateEnhancedWorksheet(
   request: WorksheetRequest,
   visualElements: VisualElement[],
-  currentEvents: any[],
-  activities: InteractiveActivity[]
+  currentEvents: any[]
 ): Promise<any> {
   const openai = getOpenAIClient();
   
@@ -95,9 +94,6 @@ ${visualElements.map(v => `- ${v.description} (${v.type})`).join('\n')}
 CURRENT EVENTS AVAILABLE:
 ${currentEvents.map(e => `- ${e.title}: ${e.description}`).join('\n')}
 
-INTERACTIVE ACTIVITIES PLANNED:
-${activities.map(a => `- ${a.title} (${a.type})`).join('\n')}
-
 CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
 
 1. ENGAGING TITLE with visual appeal
@@ -109,7 +105,15 @@ CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
    - Progressive difficulty
    - Real-world connections
 
-4. PEDAGOGICAL DESIGN:
+4. APPROPRIATE ACTIVITIES:
+   - Choose 1-2 activities that make sense for this topic
+   - For social studies/history: discussion, research, writing, analysis
+   - For science: experiments, observations, diagrams
+   - For language arts: creative writing, character analysis, vocabulary
+   - For math: problem-solving, calculations, graphing
+   - NO science experiments for non-science topics!
+
+5. PEDAGOGICAL DESIGN:
    - Age-appropriate language and concepts
    - Scaffolded learning progression
    - Multiple learning modalities
@@ -135,6 +139,14 @@ Format as structured JSON with:
       "bloomsLevel": "cognitive_level",
       "visualAidId": "id_if_applicable",
       "hint": "helpful_hint_if_needed"
+    }
+  ],
+  "activities": [
+    {
+      "id": "activity_id",
+      "type": "appropriate_activity_type",
+      "title": "Activity title",
+      "instructions": "Clear activity instructions"
     }
   ],
   "answerKey": [
@@ -256,46 +268,13 @@ export async function POST(request: NextRequest) {
       processedCurrentEvents = currentEvents.value;
     }
 
-    // Step 2: Create interactive activities based on grade level
-    const activities: InteractiveActivity[] = [];
-    
-    // Age-appropriate activities
-    const gradeNum = parseInt(gradeLevel.match(/\d+/)?.[0] || '1');
-    if (gradeNum <= 3) {
-      activities.push({
-        id: 'coloring_activity',
-        type: 'coloring',
-        title: `Color the ${subtopic} Scene`,
-        instructions: 'Color the picture while thinking about what you learned',
-        estimatedTime: '10 minutes'
-      });
-    } else if (gradeNum <= 6) {
-      activities.push({
-        id: 'matching_game',
-        type: 'matching-game',
-        title: `${subtopic} Connections`,
-        instructions: 'Draw lines to match related concepts',
-        estimatedTime: '8 minutes'
-      });
-    } else {
-      activities.push({
-        id: 'research_project',
-        type: 'experiment',
-        title: `Investigate ${subtopic}`,
-        instructions: 'Design a mini-research project on this topic',
-        materials: ['notebook', 'internet access', 'drawing materials'],
-        estimatedTime: '20 minutes'
-      });
-    }
-
     console.log('[ENHANCED-WORKSHEET-API] Generating AI content...');
 
     // Step 3: Generate comprehensive worksheet content
     const worksheetData = await generateEnhancedWorksheet(
       body,
       visualElements,
-      processedCurrentEvents,
-      activities
+      processedCurrentEvents
     );
 
     // Step 4: Create enhanced response
@@ -308,7 +287,7 @@ export async function POST(request: NextRequest) {
       answerKey: worksheetData.answerKey || [],
       createdAt: new Date().toISOString(),
       visualElements,
-      activities,
+      activities: worksheetData.activities || [], // Use AI-generated activities
       currentEvents: processedCurrentEvents.map(event => ({
         id: `news_${Date.now()}`,
         title: event.title,

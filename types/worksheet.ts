@@ -72,7 +72,7 @@ export interface VisualElement {
 
 export interface InteractiveActivity {
   id: string;
-  type: 'cut-and-paste' | 'coloring' | 'maze' | 'word-search' | 'crossword' | 'matching-game' | 'role-play' | 'experiment';
+  type: 'cut-and-paste' | 'coloring' | 'maze' | 'word-search' | 'crossword' | 'matching-game' | 'role-play' | 'research' | 'discussion' | 'presentation';
   title: string;
   instructions: string;
   materials?: string[];
