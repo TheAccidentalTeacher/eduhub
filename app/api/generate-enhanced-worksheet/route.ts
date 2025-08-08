@@ -185,6 +185,8 @@ Format as structured JSON with:
 }
 
 Make this worksheet truly engaging and educational for ${request.gradeLevel} students!
+
+CRITICAL: Respond with ONLY the JSON object above. Do not include any markdown formatting, code blocks, or explanatory text. Start directly with { and end with }.
 `;
 
   const completion = await openai.chat.completions.create({
@@ -192,7 +194,7 @@ Make this worksheet truly engaging and educational for ${request.gradeLevel} stu
     messages: [
       {
         role: "system",
-        content: "You are an expert educational designer with deep knowledge of child development, learning theories, and engaging pedagogy. Create worksheets that are both fun and educationally rigorous."
+        content: "You are an expert educational designer with deep knowledge of child development, learning theories, and engaging pedagogy. Create worksheets that are both fun and educationally rigorous. IMPORTANT: Respond with ONLY valid JSON, no markdown code blocks, no extra text."
       },
       {
         role: "user",
@@ -206,7 +208,22 @@ Make this worksheet truly engaging and educational for ${request.gradeLevel} stu
   const response = completion.choices[0]?.message?.content;
   if (!response) throw new Error('No response from OpenAI');
 
-  return JSON.parse(response);
+  // Clean the response - remove markdown code blocks if present
+  let cleanedResponse = response.trim();
+  if (cleanedResponse.startsWith('```json')) {
+    cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleanedResponse.startsWith('```')) {
+    cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+
+  try {
+    return JSON.parse(cleanedResponse);
+  } catch (parseError) {
+    console.error('[ENHANCED-WORKSHEET-API] JSON Parse Error:', parseError);
+    console.error('[ENHANCED-WORKSHEET-API] Raw Response:', response);
+    console.error('[ENHANCED-WORKSHEET-API] Cleaned Response:', cleanedResponse);
+    throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
+  }
 }
 
 // Main API endpoint
@@ -275,10 +292,22 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[ENHANCED-WORKSHEET-API] Error:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to generate enhanced worksheet';
+    let errorDetails = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (errorDetails.includes('JSON')) {
+      errorMessage = 'AI response formatting error - please try again';
+    } else if (errorDetails.includes('OpenAI')) {
+      errorMessage = 'AI service error - please check API configuration';
+    }
+    
     return NextResponse.json(
       { 
-        error: 'Failed to generate enhanced worksheet',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
