@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  // Removed standalone for Railway compatibility
   // Security headers
   async headers() {
     return [
