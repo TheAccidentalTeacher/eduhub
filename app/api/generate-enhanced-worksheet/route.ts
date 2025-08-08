@@ -90,17 +90,28 @@ CONTENT GUIDELINES:
 CURRENT EVENTS AVAILABLE:
 ${currentEvents.map(e => `- ${e.title}: ${e.description}`).join('\n')}
 
-CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
+CREATE A COMPREHENSIVE EDUCATIONAL WORKSHEET THAT INCLUDES:
 
-1. ENGAGING TITLE 
-2. CLEAR INSTRUCTIONS
-3. 8-12 VARIED QUESTIONS with:
+1. TEACHING CONTENT SECTION (Page 1):
+   - Engaging introduction to the topic
+   - Key concepts explained in age-appropriate language
+   - 3-5 main learning points with clear explanations
+   - Real-world examples and connections
+   - Visual descriptions (without actual images)
+   - Fun facts or interesting details to engage students
+   - Vocabulary terms with simple definitions
+   - This should be substantial content that actually TEACHES the topic
+
+2. ENGAGING TITLE 
+3. CLEAR INSTRUCTIONS for both reading and questions
+4. 8-12 VARIED QUESTIONS ABOUT THE READING with:
    - Different cognitive levels (Bloom's Taxonomy)
    - Multiple question types
    - Progressive difficulty
-   - Real-world connections
+   - Questions that reference the teaching content
+   - Comprehension, analysis, and application questions
 
-4. APPROPRIATE ACTIVITIES:
+5. APPROPRIATE ACTIVITIES:
    - Choose 1-2 activities that make sense for this topic
    - For social studies/history: discussion, research, writing, analysis
    - For science: experiments, observations, diagrams
@@ -108,13 +119,13 @@ CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
    - For math: problem-solving, calculations, graphing
    - NO science experiments for non-science topics!
 
-5. PEDAGOGICAL DESIGN:
+6. PEDAGOGICAL DESIGN:
    - Age-appropriate language and concepts
    - Scaffolded learning progression
    - Multiple learning modalities
    - Engagement strategies specific to ${request.gradeLevel}
 
-5. ANSWER KEY with:
+7. ANSWER KEY with:
    - Correct answers
    - Detailed explanations
    - Teaching notes
@@ -123,12 +134,30 @@ CREATE A COMPREHENSIVE WORKSHEET THAT INCLUDES:
 Format as structured JSON with:
 {
   "title": "Creative, engaging title",
-  "instructions": "Clear, comprehensive instructions",
+  "teachingContent": {
+    "introduction": "Engaging introduction paragraph",
+    "mainConcepts": [
+      {
+        "title": "Key Concept Title",
+        "explanation": "Clear, age-appropriate explanation",
+        "examples": ["Real-world example 1", "Real-world example 2"]
+      }
+    ],
+    "vocabulary": [
+      {
+        "term": "Important term",
+        "definition": "Simple, clear definition"
+      }
+    ],
+    "funFacts": ["Interesting fact 1", "Interesting fact 2"],
+    "summary": "Brief summary paragraph tying concepts together"
+  },
+  "instructions": "Clear, comprehensive instructions for reading and questions",
   "questions": [
     {
       "id": "unique_id",
       "type": "question_type", 
-      "question": "Well-crafted question",
+      "question": "Well-crafted question about the teaching content",
       "options": ["array if multiple choice"],
       "points": number,
       "bloomsLevel": "cognitive_level",
@@ -159,7 +188,7 @@ Make this worksheet truly engaging and educational for ${request.gradeLevel} stu
 `;
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-4o",
     messages: [
       {
         role: "system",
@@ -222,6 +251,7 @@ export async function POST(request: NextRequest) {
       id: generateWorksheetId(),
       title: worksheetData.title,
       content: JSON.stringify(worksheetData),
+      teachingContent: worksheetData.teachingContent,
       questions: worksheetData.questions || [],
       instructions: worksheetData.instructions,
       answerKey: worksheetData.answerKey || [],

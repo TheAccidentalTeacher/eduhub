@@ -89,7 +89,7 @@ Ensure all content is educationally appropriate and aligns with ${gradeLevel} le
 
     console.log('[WORKSHEET-API] Sending request to OpenAI');
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { WorksheetResponse, VisualElement, InteractiveActivity } from '@/types/worksheet';
+import { WorksheetResponse, VisualElement, InteractiveActivity, TeachingContent } from '@/types/worksheet';
 import ActivityTemplate from './ActivityTemplate';
 import VisualElementDisplay from './VisualElementDisplay';
 
@@ -210,6 +210,91 @@ export default function EnhancedWorksheetDisplay({
             {renderVisualElement(visual, 'large')}
           </div>
         ))}
+
+        {/* Teaching Content Section - Page 1 */}
+        {worksheet.teachingContent && (
+          <div className="teaching-content-section mb-8 p-6 border-2 border-black bg-blue-50">
+            <h2 className="text-2xl font-bold text-black mb-6 text-center border-b-2 border-black pb-2">
+              📚 Learn About This Topic
+            </h2>
+            
+            {/* Introduction */}
+            {worksheet.teachingContent.introduction && (
+              <div className="mb-6">
+                <p className="text-black text-lg leading-relaxed font-medium">
+                  {worksheet.teachingContent.introduction}
+                </p>
+              </div>
+            )}
+
+            {/* Main Concepts */}
+            {worksheet.teachingContent.mainConcepts && worksheet.teachingContent.mainConcepts.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-black mb-4 border-b border-gray-400 pb-1">
+                  🔑 Key Concepts:
+                </h3>
+                {worksheet.teachingContent.mainConcepts.map((concept, index) => (
+                  <div key={index} className="mb-4 p-4 bg-white border border-gray-300 rounded">
+                    <h4 className="text-lg font-bold text-black mb-2">{concept.title}</h4>
+                    <p className="text-black mb-3 leading-relaxed">{concept.explanation}</p>
+                    {concept.examples && concept.examples.length > 0 && (
+                      <div>
+                        <strong className="text-black">Examples:</strong>
+                        <ul className="list-disc list-inside ml-4 text-black">
+                          {concept.examples.map((example, exIndex) => (
+                            <li key={exIndex} className="mb-1">{example}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Vocabulary */}
+            {worksheet.teachingContent.vocabulary && worksheet.teachingContent.vocabulary.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-black mb-4 border-b border-gray-400 pb-1">
+                  📖 Important Words:
+                </h3>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {worksheet.teachingContent.vocabulary.map((vocab, index) => (
+                    <div key={index} className="p-3 bg-white border border-gray-300 rounded">
+                      <strong className="text-black text-lg">{vocab.term}:</strong>
+                      <span className="text-black ml-2">{vocab.definition}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fun Facts */}
+            {worksheet.teachingContent.funFacts && worksheet.teachingContent.funFacts.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-black mb-4 border-b border-gray-400 pb-1">
+                  🌟 Fun Facts:
+                </h3>
+                <ul className="space-y-2">
+                  {worksheet.teachingContent.funFacts.map((fact, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-black mr-2">•</span>
+                      <span className="text-black leading-relaxed">{fact}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Summary */}
+            {worksheet.teachingContent.summary && (
+              <div className="p-4 bg-yellow-100 border-l-4 border-yellow-500">
+                <h3 className="text-lg font-bold text-black mb-2">📝 Summary:</h3>
+                <p className="text-black leading-relaxed">{worksheet.teachingContent.summary}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Main Content Area */}
         <div className="worksheet-body">

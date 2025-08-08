@@ -15,10 +15,30 @@ export interface WorksheetRequest {
   enableAdaptiveDifferentiation?: boolean;
 }
 
+export interface TeachingContent {
+  introduction: string;
+  mainConcepts: MainConcept[];
+  vocabulary: VocabularyTerm[];
+  funFacts: string[];
+  summary: string;
+}
+
+export interface MainConcept {
+  title: string;
+  explanation: string;
+  examples: string[];
+}
+
+export interface VocabularyTerm {
+  term: string;
+  definition: string;
+}
+
 export interface WorksheetResponse {
   id: string;
   title: string;
   content: string;
+  teachingContent?: TeachingContent;
   questions: WorksheetQuestion[];
   instructions: string;
   answerKey?: WorksheetAnswer[];
